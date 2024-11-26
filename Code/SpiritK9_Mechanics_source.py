@@ -201,7 +201,7 @@ class Character:
 
         # Define movement boundaries (e.g., within the screen dimensions)
         min_x, max_x = 0, self.width - self.character_rect.width
-        min_y, max_y = 0, self.height - self.character_rect.height
+        top_border, bottom_border = 50, self.height - 28 - self.character_rect.height
 
         if keys[pygame.K_a]:
             self.character_rect.x = max(min_x, self.character_rect.x - 5)
@@ -212,11 +212,33 @@ class Character:
             self.running = True
             self.flipped = True
         if keys[pygame.K_w]:
-            self.character_rect.y = max(min_y, self.character_rect.y - 5)
+            self.character_rect.y = max(top_border, self.character_rect.y - 5)
             self.running = True
         if keys[pygame.K_s]:
-            self.character_rect.y = min(max_y, self.character_rect.y + 5)
+            self.character_rect.y = min(bottom_border, self.character_rect.y + 5)
             self.running = True
+
+        if self.dashing:
+            if self.flipped:
+                self.character_rect.x = min(max_x, self.character_rect.x + self.dash_speed)
+            else:
+                self.character_rect.x = max(min_x, self.character_rect.x - self.dash_speed)
+
+            # Ensure the character stays within the vertical boundaries while dashing
+            if self.character_rect.y < top_border:
+                self.character_rect.y = top_border
+            elif self.character_rect.y > bottom_border:
+                self.character_rect.y = bottom_border
+
+            # Update dash frame index and counter
+            self.dash_frame_counter += 1
+            if self.dash_frame_counter >= self.dash_frame_update_rate:
+                self.dash_frame_counter = 0
+                self.dash_frame_index = (self.dash_frame_index + 1) % len(self.dash_frames)
+
+            # Stop dashing when the dash animation is complete
+            if self.dash_frame_index == len(self.dash_frames) - 1:
+                self.dashing = False
 
         self.hitbox.center = self.character_rect.center
 
@@ -390,13 +412,13 @@ class Game:
         self.frame_ui2 = pygame.image.load('D:/SpiritKnight/Sprites/Frame1.png')
         self.frame_ui2 = pygame.transform.scale(self.frame_ui2, (int(self.frame_ui2.get_width()*self.scale_factor), int(self.frame_ui2.get_height()*self.scale_factor)))
         self.frame_ui2_rect = self.frame_ui2.get_rect(center=(160, 750))
-        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/placeholder.jpg')
+        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
         self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width()*self.scale_factor), int(self.bg.get_height()*self.scale_factor)))
 
     def load_goblin_frames(self):
         gif_path = 'D:/SpiritKnight/Sprites/Goblin.gif'
         gif = Image.open(gif_path)
-        self.frames_gob = []
+        self.frames_gob = [] 
         try:
             while True:
                 frame = gif.copy()
