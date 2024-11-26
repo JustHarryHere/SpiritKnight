@@ -199,19 +199,23 @@ class Character:
         keys = pygame.key.get_pressed()
         self.running = False
 
+        # Define movement boundaries (e.g., within the screen dimensions)
+        min_x, max_x = 0, self.width - self.character_rect.width
+        min_y, max_y = 0, self.height - self.character_rect.height
+
         if keys[pygame.K_a]:
-            self.character_rect.x -= 5
+            self.character_rect.x = max(min_x, self.character_rect.x - 5)
             self.running = True
             self.flipped = False
         if keys[pygame.K_d]:
-            self.character_rect.x += 5
+            self.character_rect.x = min(max_x, self.character_rect.x + 5)
             self.running = True
             self.flipped = True
         if keys[pygame.K_w]:
-            self.character_rect.y -= 5
+            self.character_rect.y = max(min_y, self.character_rect.y - 5)
             self.running = True
         if keys[pygame.K_s]:
-            self.character_rect.y += 5
+            self.character_rect.y = min(max_y, self.character_rect.y + 5)
             self.running = True
 
         self.hitbox.center = self.character_rect.center
@@ -352,7 +356,7 @@ class Game:
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
-        self.screen = pygame.display.set_mode((self.width, self.height - 50))
+        self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False)
 
@@ -386,6 +390,8 @@ class Game:
         self.frame_ui2 = pygame.image.load('D:/SpiritKnight/Sprites/Frame1.png')
         self.frame_ui2 = pygame.transform.scale(self.frame_ui2, (int(self.frame_ui2.get_width()*self.scale_factor), int(self.frame_ui2.get_height()*self.scale_factor)))
         self.frame_ui2_rect = self.frame_ui2.get_rect(center=(160, 750))
+        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/placeholder.jpg')
+        self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width()*self.scale_factor), int(self.bg.get_height()*self.scale_factor)))
 
     def load_goblin_frames(self):
         gif_path = 'D:/SpiritKnight/Sprites/Goblin.gif'
@@ -403,6 +409,7 @@ class Game:
     def run(self):
         while True:
             self.screen.fill((0, 0, 0))  # Fill the screen with black
+            self.screen.blit(self.bg, (0,0))
 
             direction = self.goblin.update(self.character.character_rect.center, self.character.attacking, self.character.charging)
 
