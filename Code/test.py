@@ -100,8 +100,8 @@ def main():
     clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
     
-    gif_path = 'D:\\Sprites\\lil dude bigger.gif'
-    goblin_gif = 'D:\\Sprites\\Goblin.gif'
+    gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+    goblin_gif = 'D:/SpiritKnight/Sprites/Goblin.gif'
     frames = []
     goblin_frames = []
     
@@ -114,9 +114,9 @@ def main():
     flipped_frames_goblin = [pygame.transform.flip(goblin_frame, True, False) for goblin_frame in goblin_frames]
     
     # Load frames for attack, charge, and run animations
-    attack_frames = load_frames_from_sprite_sheet('D:\\Sprites\\lil dude big.png', 6)
-    charge_attack_frames = load_frames_from_sprite_sheet('D:\\Sprites\\Battery.png', 9)
-    run_frames = load_frames_from_sprite_sheet('D:\\Sprites\\running.png', 8)
+    attack_frames = load_frames_from_sprite_sheet('D:/SpiritKnight/Sprites/lil dude big.png', 6)
+    charge_attack_frames = load_frames_from_sprite_sheet('D:/SpiritKnight/Sprites/Battery.png', 9)
+    run_frames = load_frames_from_sprite_sheet('D:/SpiritKnight/Sprites/running.png', 8)
 
     # Flip frames for left-facing animations
     flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in attack_frames]
