@@ -38,7 +38,7 @@ def spawn_enemy(character_pos, width, height, min_distance):
             return enemy_pos
 
 # Function to handle events
-def handle_events(attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time):
+def handle_events(self, attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -48,6 +48,7 @@ def handle_events(attacking, attack_frame_index, attack_frame_counter, charging,
                 attacking = True
                 attack_frame_index = 0
                 attack_frame_counter = 0
+                self.attack_sound.play()
             elif event.button == 3 and not charge_cooldown:  # Right click
                 charging = True
                 charge_frame_index = 0
@@ -95,6 +96,7 @@ class Character:
         self.height = height
         self.load_assets()
         self.reset_states()
+        self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
 
     def load_assets(self):
         self.load_gif()
@@ -375,6 +377,7 @@ class Goblin:
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
