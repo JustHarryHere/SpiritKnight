@@ -7,7 +7,12 @@ import math
 
 pygame.mixer.init()
 
-attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+run_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/running-6358.wav')
+
+# Load and play background music
+pygame.mixer.music.load('D:/SpiritKnight/Music/Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3')
+pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+
 
 # Function to load GIF frames
 def gif_image(gif, frames):
@@ -206,7 +211,7 @@ class Character:
         # Define movement boundaries (e.g., within the screen dimensions)
         min_x, max_x = 0, self.width - 15 - self.character_rect.width
         top_border, bottom_border = 70, self.height - 32 - self.character_rect.height
-
+        
         if keys[pygame.K_a]:
             self.character_rect.x = max(min_x, self.character_rect.x - 5)
             self.running = True
@@ -436,6 +441,11 @@ class Game:
             self.screen.fill((0, 0, 0))  # Fill the screen with black
             self.screen.blit(self.bg, (0,0))
 
+            #Sound effect
+            self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+            self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
+            self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+
             direction = self.goblin.update(self.character.character_rect.center, self.character.attacking, self.character.charging)
 
             self.goblin.draw(self.screen)
@@ -449,7 +459,7 @@ class Game:
                         self.character.attacking = True
                         self.character.attack_frame_index = 0
                         self.character.attack_frame_counter = 0
-                        attack_sound.play()
+                        self.attack_sound.play()
                         if self.character.hitbox.colliderect(self.goblin.gob_rect):
                             self.goblin.hit_recently = False  # Allow goblin to be hit again
                     elif event.button == 3 and not self.character.charge_cooldown:  # Right click
@@ -458,6 +468,7 @@ class Game:
                         self.character.charge_frame_counter = 0
                         self.character.charge_cooldown = True
                         self.character.last_charge_time = time.time()
+                        self.charge_sound.play()
 
             if self.goblin.goblin_hit_count >= 3:
                 self.goblin.gob_rect.topleft = (-1000, -1000)
@@ -479,6 +490,7 @@ class Game:
                 self.character.dash_frame_counter = 0
                 self.character.last_dash_time = time.time()
                 self.character.dash_cooldown = True
+                self.dash_sound.play()
 
             # Draw the character
             self.character.draw(self.screen)
