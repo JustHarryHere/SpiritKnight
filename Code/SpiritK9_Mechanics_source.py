@@ -5,6 +5,10 @@ import random
 from pygame.math import Vector2
 import math
 
+pygame.mixer.init()
+
+attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+
 # Function to load GIF frames
 def gif_image(gif, frames):
     try:
@@ -38,7 +42,7 @@ def spawn_enemy(character_pos, width, height, min_distance):
             return enemy_pos
 
 # Function to handle events
-def handle_events(self, attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time):
+def handle_events(attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -48,7 +52,6 @@ def handle_events(self, attacking, attack_frame_index, attack_frame_counter, cha
                 attacking = True
                 attack_frame_index = 0
                 attack_frame_counter = 0
-                self.attack_sound.play()
             elif event.button == 3 and not charge_cooldown:  # Right click
                 charging = True
                 charge_frame_index = 0
@@ -96,7 +99,6 @@ class Character:
         self.height = height
         self.load_assets()
         self.reset_states()
-        self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
 
     def load_assets(self):
         self.load_gif()
@@ -167,7 +169,7 @@ class Character:
     def reset_states(self):
         self.character_rect = self.frames[0].get_rect(center=(self.width // 2, self.height // 2))
         self.hitbox = self.character_rect.copy()
-        self.hitbox.inflate_ip(-27, -27)
+        self.hitbox.inflate_ip(-40, -40)
         self.frame_index = 0
         self.run_frame_index = 0
         self.attack_frame_index = 0
@@ -202,8 +204,8 @@ class Character:
         self.running = False
 
         # Define movement boundaries (e.g., within the screen dimensions)
-        min_x, max_x = 0, self.width - self.character_rect.width
-        top_border, bottom_border = 50, self.height - 28 - self.character_rect.height
+        min_x, max_x = 0, self.width - 15 - self.character_rect.width
+        top_border, bottom_border = 70, self.height - 32 - self.character_rect.height
 
         if keys[pygame.K_a]:
             self.character_rect.x = max(min_x, self.character_rect.x - 5)
@@ -312,7 +314,7 @@ class Goblin:
         self.frames_gob = frames_gob
         self.width = width
         self.height = height
-        self.gob_rect = self.frames_gob[0].get_rect(center=((width // 2) - 200, (height // 2)))
+        self.gob_rect = self.frames_gob[0].get_rect(center=((width // 4) - 200, (height // 4)))
         self.frame_gob_index = 0
         self.gob_frame_counter = 0
         self.goblin_hit_count = 0
@@ -377,14 +379,12 @@ class Goblin:
 class Game:
     def __init__(self):
         pygame.init()
-        pygame.mixer.init()
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False)
-
         self.character = Character(self.width, self.height)
         self.load_goblin_frames()
         self.goblin = Goblin(self.frames_gob, self.width, self.height)
@@ -449,6 +449,7 @@ class Game:
                         self.character.attacking = True
                         self.character.attack_frame_index = 0
                         self.character.attack_frame_counter = 0
+                        attack_sound.play()
                         if self.character.hitbox.colliderect(self.goblin.gob_rect):
                             self.goblin.hit_recently = False  # Allow goblin to be hit again
                     elif event.button == 3 and not self.character.charge_cooldown:  # Right click
