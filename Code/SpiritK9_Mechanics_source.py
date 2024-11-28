@@ -381,6 +381,43 @@ class Goblin:
                 screen.blit(self.flipped_frames_goblin[self.frame_gob_index], self.gob_rect)
             pygame.draw.rect(screen, (0, 255, 0), self.gob_rect, 2)  # Hitbox (green)
 
+class Cross: 
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.load_assets()
+        self.frame_index = 0
+        self.frame_counter = 0
+        self.frame_update_rate = 5
+
+    def load_assets(self):
+        self.load_gif()
+
+    def load_gif(self):
+        gif_path = 'D:/SpiritKnight/Sprites/Mary on a.gif'
+        gif = Image.open(gif_path)
+        self.frames = []
+        try:
+            while True:
+                frame = gif.copy()
+                frame = frame.convert("RGBA")
+                frame = frame.resize((60, 60), Image.Resampling.LANCZOS)
+                self.frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+                gif.seek(len(self.frames))  # Move to the next frame
+        except EOFError:
+            pass
+
+        self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
+
+    def draw(self, screen, position, flipped=False):
+        frames = self.flipped_frames if flipped else self.frames
+        screen.blit(frames[self.frame_index], position)
+        self.frame_counter += 1
+        if self.frame_counter >= self.frame_update_rate:
+            self.frame_counter = 0
+            self.frame_index = (self.frame_index + 1) % len(frames)
+
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -393,6 +430,12 @@ class Game:
         self.character = Character(self.width, self.height)
         self.load_goblin_frames()
         self.goblin = Goblin(self.frames_gob, self.width, self.height)
+
+        self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+        self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
+        self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+
+        self.cross = Cross(50,50)
 
         # UI elements
         self.scale_factor = 0.5
@@ -441,10 +484,7 @@ class Game:
             self.screen.fill((0, 0, 0))  # Fill the screen with black
             self.screen.blit(self.bg, (0,0))
 
-            #Sound effect
-            self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
-            self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
-            self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+            self.cross.draw(self.screen, (self.width // 2 + 100, self.height // 2))
 
             direction = self.goblin.update(self.character.character_rect.center, self.character.attacking, self.character.charging)
 
