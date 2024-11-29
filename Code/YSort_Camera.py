@@ -63,6 +63,9 @@ item_1_rect = item_1.get_rect(center = (75,78))
 bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
 bg = pygame.transform.scale(bg, (int(bg.get_width()*scale_factor), int(bg.get_height()*scale_factor)))
 bg_rect = bg.get_rect(topleft = (0,0))
+obstacle = pygame.image.load('D:/SpiritKnight/Sprites/tree.png')
+obstacle = pygame.transform.scale(obstacle, (int(obstacle.get_width()*0.3), int(obstacle.get_height()*0.3)))
+obstacle_rect = obstacle.get_rect(center = (width//2 + 200, height // 2 - 200))
 
 while True:
 
@@ -102,10 +105,19 @@ while True:
         frame_counter = 0
         frame_index = (frame_index + 1) % len(char_frames)
         cross_frame_index = (cross_frame_index + 1) % len(cross_frames)
-    if flipped:
-        screen.blit(flipped_frames[frame_index], char_rect)
-    else:
-        screen.blit(char_frames[frame_index], char_rect)
+    if char_rect.y > obstacle_rect.y:
+        screen.blit(obstacle, obstacle_rect)
+        if flipped:
+            screen.blit(flipped_frames[frame_index], char_rect)
+        else:
+            screen.blit(char_frames[frame_index], char_rect)
+    elif char_rect.y < obstacle_rect.y:
+        if flipped:
+            screen.blit(flipped_frames[frame_index], char_rect)
+        else:
+            screen.blit(char_frames[frame_index], char_rect)
+        screen.blit(obstacle, obstacle_rect)
+
 
 
     pygame.display.flip()
