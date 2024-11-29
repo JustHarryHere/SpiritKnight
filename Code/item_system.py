@@ -57,7 +57,7 @@ Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), i
 Hp_rect = Hp_bar.get_rect(topleft = (0,0))
 
 while True:
-    
+
     screen.fill((0, 0, 0))
 
     screen.blit(Hp_bar, Hp_rect)
