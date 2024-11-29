@@ -389,6 +389,7 @@ class Cross:
         self.frame_index = 0
         self.frame_counter = 0
         self.frame_update_rate = 5
+        self.picked_up =  False 
 
     def load_assets(self):
         self.load_gif()
@@ -410,12 +411,16 @@ class Cross:
         self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
 
     def draw(self, screen, position, flipped=False):
-        frames = self.flipped_frames if flipped else self.frames
-        screen.blit(frames[self.frame_index], position)
-        self.frame_counter += 1
-        if self.frame_counter >= self.frame_update_rate:
-            self.frame_counter = 0
-            self.frame_index = (self.frame_index + 1) % len(frames)
+        if not self.picked_up:
+            frames = self.flipped_frames if flipped else self.frames
+            screen.blit(frames[self.frame_index], position)
+            self.frame_counter += 1
+            if self.frame_counter >= self.frame_update_rate:
+                self.frame_counter = 0
+                self.frame_index = (self.frame_index + 1) % len(frames)
+    
+    def pick_up(self):
+        self.picked_up = True
 
 
 class Game:
@@ -434,6 +439,7 @@ class Game:
         self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
         self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
         self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
 
         self.cross = Cross(50,50)
 
@@ -509,6 +515,16 @@ class Game:
                         self.character.charge_cooldown = True
                         self.character.last_charge_time = time.time()
                         self.charge_sound.play()
+            keys =  pygame.key.get_pressed()
+            if keys[pygame.K_f]:
+                # Check if character is near the cross to pick it up
+                character_pos = self.character.character_rect.center
+                cross_pos = (self.width // 2 + 100, self.height // 2)  
+                distance = ((character_pos[0] - cross_pos[0]) ** 2 + (character_pos[1] - cross_pos[1]) ** 2) ** 0.5
+                if distance < 50:  
+                    if not self.cross.pick_up:
+                        self.cross.pick_up()
+                        self.pick_up_sound.play()
 
             if self.goblin.goblin_hit_count >= 3:
                 self.goblin.gob_rect.topleft = (-1000, -1000)
