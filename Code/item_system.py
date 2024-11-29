@@ -51,8 +51,16 @@ picked_up = False
 
 pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
 
+scale_factor = 0.5
+Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
+Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
+Hp_rect = Hp_bar.get_rect(topleft = (0,0))
+
 while True:
+    
     screen.fill((0, 0, 0))
+
+    screen.blit(Hp_bar, Hp_rect)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
