@@ -66,6 +66,15 @@ bg_rect = bg.get_rect(topleft = (0,0))
 obstacle = pygame.image.load('D:/SpiritKnight/Sprites/tree.png')
 obstacle = pygame.transform.scale(obstacle, (int(obstacle.get_width()*0.3), int(obstacle.get_height()*0.3)))
 obstacle_rect = obstacle.get_rect(center = (width//2 + 200, height // 2 - 200))
+rock = pygame.image.load('D:/SpiritKnight/Sprites/rock.png')
+rock = pygame.transform.scale(rock, (int(rock.get_width()*scale_factor), int(rock.get_height()*scale_factor)))
+rock_rect = rock.get_rect(center = (width//2-300, height//2))
+
+game_objects = [
+    {"sprite": obstacle, "rect": obstacle_rect},  # Cái cây
+    {"sprite": rock, "rect": rock_rect},          # Cục đá
+    {"sprite": char_frames[0], "rect": char_rect}  # Nhân vật
+]
 
 while True:
 
@@ -105,18 +114,18 @@ while True:
         frame_counter = 0
         frame_index = (frame_index + 1) % len(char_frames)
         cross_frame_index = (cross_frame_index + 1) % len(cross_frames)
-    if char_rect.y > obstacle_rect.y:
-        screen.blit(obstacle, obstacle_rect)
-        if flipped:
-            screen.blit(flipped_frames[frame_index], char_rect)
-        else:
-            screen.blit(char_frames[frame_index], char_rect)
-    elif char_rect.y < obstacle_rect.y:
-        if flipped:
-            screen.blit(flipped_frames[frame_index], char_rect)
-        else:
-            screen.blit(char_frames[frame_index], char_rect)
-        screen.blit(obstacle, obstacle_rect)
+    
+    # Sắp xếp danh sách đối tượng theo tọa độ y (z-index)
+    game_objects.sort(key=lambda obj: obj["rect"].centery)
+
+    # Cập nhật sprite nhân vật (phải kiểm tra lật hình)
+    for obj in game_objects:
+        if obj["rect"] == char_rect:  # Đối tượng là nhân vật
+            obj["sprite"] = flipped_frames[frame_index] if flipped else char_frames[frame_index]
+
+    # Vẽ các đối tượng theo thứ tự đã sắp xếp
+    for obj in game_objects:
+        screen.blit(obj["sprite"], obj["rect"])
 
 
 
