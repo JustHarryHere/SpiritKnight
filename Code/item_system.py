@@ -9,6 +9,9 @@ height = 720
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
+# Dùng cho stack item
+item_count = 0
+
 #Char
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
 character_gif = Image.open(character_gif_path)
@@ -93,7 +96,8 @@ while True:
         char_rect.y += 5
     
     # Nhặt vật phẩm
-    if keys[pygame.K_f] and not picked_up:
+    if keys[pygame.K_f] and item_count < 2 and not picked_up:
+        item_count += 1
         if char_rect.colliderect(cross_rect):
             picked_up = True
             pick_up_sound.play()
@@ -102,9 +106,12 @@ while True:
 
     # Quăng vật phẩm
     if keys[pygame.K_g] and picked_up:
-        picked_up = False
+        item_count -= 1
+        # item_count = 0 thì tiếp tục đoạn dưới và quăng vật phẩm, item_count còn 1 thì vẫn ở trong túi
+        if item_count == 0:
+          picked_up = False
         # Đặt vật phẩm gần nhân vật khi thả ra
-        cross_rect.center = (char_rect.centerx + 50, char_rect.centery)
+          cross_rect.center = (char_rect.centerx + 50, char_rect.centery)
 
     # Hiển thị vật phẩm
     if not picked_up:
