@@ -5,13 +5,11 @@ import time
 # Khởi tạo Pygame
 pygame.init()
 
-info = pygame.display.Info()
-
 # Thông số của cửa sổ pygame 
-width = info.current_w
-height = info.current_h
-screen = pygame.display.set_mode((width, height - 50))
-clock = pygame.time.Clock()
+width = 1280
+height = 720
+screen = pygame.display.set_mode((width, height))
+
 
 # Màu sắc
 red = (255, 0, 0)
@@ -22,14 +20,14 @@ white = (255, 255, 255) # Màu trắng cho viền chữ
 font_path = 'D:\SpiritKnight\Font\Pixelmax-Regular.otf'  # Thay thế bằng đường dẫn chính xác đến tệp font Pixel của bạn
 
 # Font chữ Pixel
-font = pygame.font.Font(font_path, 74)
-title_font = pygame.font.Font(font_path, 200)  # Font chữ lớn hơn cho tiêu đề
-credit_font = pygame.font.Font(font_path, 50)
+font = pygame.font.Font(font_path, 55)
+title_font = pygame.font.Font(font_path, 120)  # Font chữ lớn hơn cho tiêu đề
+credit_font = pygame.font.Font(font_path, 30)
 # Văn bản Menu
 text_title = title_font.render('SPIRIT KNIGHT', True, black)  # Tiêu đề game
 
 # Vị trí văn bản
-title_rect = text_title.get_rect(center=(width // 2, height // 2 - 300))
+title_rect = text_title.get_rect(center=(width // 2, height // 2 - 160))
 
 # Tải âm thanh click
 click_sound_path = 'D:\SpiritKnight\Music\minecraft_click (mp3cut.net).mp3'  # Đảm bảo thay thế bằng đường dẫn chính xác
@@ -72,9 +70,9 @@ try:
     options_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Option.png')
     quit_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Quit.png')
 
-    start_frames = load_sprite_sheet(start_sprite_sheet, 640, 100, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
-    options_frames = load_sprite_sheet(options_sprite_sheet, 640, 100, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
-    quit_frames = load_sprite_sheet(quit_sprite_sheet, 640, 100, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
+    start_frames = load_sprite_sheet(start_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
+    options_frames = load_sprite_sheet(options_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
+    quit_frames = load_sprite_sheet(quit_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
 except pygame.error as e:
     print(f"Không thể tải sprite sheet: {e}")
     sys.exit()
@@ -144,10 +142,10 @@ def options_menu():
         pygame.display.flip()
 
 # Tạo văn bản cho nút Credit
-credit_font = pygame.font.Font(font_path, 50)
+credit_font = pygame.font.Font(font_path, 40)
 credit_text = credit_font.render('Credit', True, black)
 credit_outline = credit_font.render('Credit', True, white)
-credit_rect = credit_text.get_rect(topleft=(15, height - 120)) # Vị trí góc trái màn hình
+credit_rect = credit_text.get_rect(topleft=(15, height - 80)) # Vị trí góc trái màn hình
 
 # Hàm để hiển thị thông tin Credit
 def show_credits():
@@ -177,9 +175,9 @@ def show_credits():
         pygame.display.flip()
 
 # Tạo các nút
-start_button = Button(start_frames, (width // 2, height // 2 - 100))
+start_button = Button(start_frames, (width // 2, height // 2 - 50))
 options_button = Button(options_frames, (width // 2, height // 2 + 50))
-quit_button = Button(quit_frames, (width // 2, height // 2 + 200))
+quit_button = Button(quit_frames, (width // 2, height // 2 + 150))
 
 # Tải và phát nhạc nền
 music_path = 'D:\SpiritKnight\Music\Melancholic Walk.mp3'  # Thay thế bằng đường dẫn chính xác đến tệp nhạc của bạn
@@ -212,8 +210,8 @@ def main_menu():
         main_title = title_font.render('SPIRIT KNIGHT', True, black)
 
         # Vị trí tiêu đề
-        outline_rect = outline_title.get_rect(center=(width // 2, height // 2 - 300))
-        main_rect = main_title.get_rect(center=(width // 2, height // 2 - 300))
+        outline_rect = outline_title.get_rect(center=(width // 2, height // 2 - 160))
+        main_rect = main_title.get_rect(center=(width // 2, height // 2 - 160))
 
         # Render tiêu đề với viền
         for dx in [-3, -2, -1, 1, 2, 3]:            
