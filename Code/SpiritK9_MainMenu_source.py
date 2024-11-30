@@ -10,7 +10,7 @@ info = pygame.display.Info()
 # Thông số của cửa sổ pygame 
 width = info.current_w
 height = info.current_h
-screen = pygame.display.set_mode((width, height - 50))
+screen = pygame.display.set_mode((1920, 1080 - 50))
 clock = pygame.time.Clock()
 
 # Màu sắc
