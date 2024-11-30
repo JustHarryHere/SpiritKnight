@@ -78,7 +78,6 @@ while True:
             sys.exit()
     
     keys = pygame.key.get_pressed()
-    moving = False
     
     # Điều khiển di chuyển nhân vật
     if keys[pygame.K_a]:
