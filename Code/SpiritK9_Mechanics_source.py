@@ -203,6 +203,7 @@ class Character:
         self.dash_duration = len(self.dash_frames)
         self.dash_speed = 10
         self.collision = False
+        self.picked_up = False
 
     def handle_keys(self):
         keys = pygame.key.get_pressed()
@@ -210,7 +211,7 @@ class Character:
 
         # Define movement boundaries (e.g., within the screen dimensions)
         min_x, max_x = 0, self.width - 15 - self.character_rect.width
-        top_border, bottom_border = 70, self.height - 32 - self.character_rect.height
+        top_border, bottom_border = 45, self.height - 32 - self.character_rect.height
         
         if keys[pygame.K_a]:
             self.character_rect.x = max(min_x, self.character_rect.x - 5)
@@ -426,9 +427,8 @@ class Cross:
 class Game:
     def __init__(self):
         pygame.init()
-        info = pygame.display.Info()
-        self.width = info.current_w
-        self.height = info.current_h
+        self.width = 1280
+        self.height = 720
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False)
@@ -447,16 +447,16 @@ class Game:
         self.scale_factor = 0.5
         self.charge_ui = pygame.image.load('D:/SpiritKnight/Sprites/Skill icon.png')
         self.charge_ui = pygame.transform.scale(self.charge_ui, (int(self.charge_ui.get_width()*self.scale_factor), int(self.charge_ui.get_height()*self.scale_factor)))
-        self.charge_ui_rect = self.charge_ui.get_rect(center=(1380, 45))
+        self.charge_ui_rect = self.charge_ui.get_rect(center=(1230, 45))
         self.dash_ui = pygame.image.load('D:/SpiritKnight/Sprites/Dash icon2.png')
         self.dash_ui = pygame.transform.scale(self.dash_ui, (int(self.dash_ui.get_width()*self.scale_factor), int(self.dash_ui.get_height()*self.scale_factor)))
-        self.dash_ui_rect = self.dash_ui.get_rect(center=(1280, 45))
+        self.dash_ui_rect = self.dash_ui.get_rect(center=(1130, 45))
         self.cooldown_effect = pygame.image.load('D:/SpiritKnight/Sprites/Skill cooldown.png')
         self.cooldown_effect = pygame.transform.scale(self.cooldown_effect, (int(self.cooldown_effect.get_width()*self.scale_factor), int(self.cooldown_effect.get_height()*self.scale_factor)))
-        self.cooldown_effect_rect = self.cooldown_effect.get_rect(center=(1380,45))
+        self.cooldown_effect_rect = self.cooldown_effect.get_rect(center=(1230,45))
         self.cooldown_effect_2 = pygame.image.load('D:/SpiritKnight/Sprites/Dash cooldown.png')
         self.cooldown_effect_2 = pygame.transform.scale(self.cooldown_effect_2, (int(self.cooldown_effect_2.get_width()*self.scale_factor), int(self.cooldown_effect_2.get_height()*self.scale_factor)))
-        self.cooldown_effect_2_rect = self.cooldown_effect_2.get_rect(center=(1280,45))
+        self.cooldown_effect_2_rect = self.cooldown_effect_2.get_rect(center=(1130,45))
         self.Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
         self.Hp_bar = pygame.transform.scale(self.Hp_bar, (int(self.Hp_bar.get_width()*self.scale_factor), int(self.Hp_bar.get_height()*self.scale_factor)))
         self.Hp_bar_rect = self.Hp_bar.get_rect(topleft=(0, 0))
@@ -465,12 +465,12 @@ class Game:
         self.Inv_rect = self.Inv.get_rect(topleft=(0, 0))
         self.frame_ui = pygame.image.load('D:/SpiritKnight/Sprites/Frame2.png')
         self.frame_ui = pygame.transform.scale(self.frame_ui, (int(self.frame_ui.get_width()*self.scale_factor), int(self.frame_ui.get_height()*self.scale_factor)))
-        self.frame_ui_rect = self.frame_ui.get_rect(center=(1380, 45))
+        self.frame_ui_rect = self.frame_ui.get_rect(center=(1230, 45))
         self.frame_ui2 = pygame.image.load('D:/SpiritKnight/Sprites/Frame1.png')
         self.frame_ui2 = pygame.transform.scale(self.frame_ui2, (int(self.frame_ui2.get_width()*self.scale_factor), int(self.frame_ui2.get_height()*self.scale_factor)))
-        self.frame_ui2_rect = self.frame_ui2.get_rect(center=(1280, 45))
-        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
-        self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width()*self.scale_factor), int(self.bg.get_height()*self.scale_factor)))
+        self.frame_ui2_rect = self.frame_ui2.get_rect(center=(1130, 45))
+        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
+        #self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width()*self.scale_factor), int(self.bg.get_height()*self.scale_factor)))
 
     def load_goblin_frames(self):
         gif_path = 'D:/SpiritKnight/Sprites/Goblin.gif'
@@ -515,16 +515,6 @@ class Game:
                         self.character.charge_cooldown = True
                         self.character.last_charge_time = time.time()
                         self.charge_sound.play()
-            keys =  pygame.key.get_pressed()
-            if keys[pygame.K_f]:
-                # Check if character is near the cross to pick it up
-                character_pos = self.character.character_rect.center
-                cross_pos = (self.width // 2 + 100, self.height // 2)  
-                distance = ((character_pos[0] - cross_pos[0]) ** 2 + (character_pos[1] - cross_pos[1]) ** 2) ** 0.5
-                if distance < 50:  
-                    if not self.cross.pick_up:
-                        self.cross.pick_up()
-                        self.pick_up_sound.play()
 
             if self.goblin.goblin_hit_count >= 3:
                 self.goblin.gob_rect.topleft = (-1000, -1000)
