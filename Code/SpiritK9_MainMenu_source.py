@@ -19,7 +19,7 @@ black = (0, 0, 0)
 white = (255, 255, 255) # Màu trắng cho viền chữ
 
 # Đường dẫn đến font Pixel
-font_path = 'D:/Pixelmax-Regular.otf'  # Thay thế bằng đường dẫn chính xác đến tệp font Pixel của bạn
+font_path = 'D:\SpiritKnight\Font\Pixelmax-Regular.otf'  # Thay thế bằng đường dẫn chính xác đến tệp font Pixel của bạn
 
 # Font chữ Pixel
 font = pygame.font.Font(font_path, 74)
@@ -31,10 +31,19 @@ text_title = title_font.render('SPIRIT KNIGHT', True, black)  # Tiêu đề game
 # Vị trí văn bản
 title_rect = text_title.get_rect(center=(width // 2, height // 2 - 300))
 
+# Tải âm thanh click
+click_sound_path = 'D:\SpiritKnight\Music\minecraft_click (mp3cut.net).mp3'  # Đảm bảo thay thế bằng đường dẫn chính xác
+try:
+    click_sound = pygame.mixer.Sound(click_sound_path)
+except pygame.error as e:
+    print(f"Không thể tải âm thanh click: {e}")
+    sys.exit()
+
 # Tải hình ảnh
-image_path = 'D:\Background_menu.jpg'  # Đảm bảo thay thế bằng đường dẫn chính xác
-logo_path = 'D:/Goblin.gif'  # Đảm bảo thay thế bằng đường dẫn chính xác
-credit_bg_path = 'D:/background_credit.jpg' # Thay thế bằng đường dẫn chính xác đến tệp ảnh nền của bạn
+image_path = 'D:\SpiritKnight\Sprites\Background_menu.jpg'  # Đảm bảo thay thế bằng đường dẫn chính xác
+logo_path = 'D:\SpiritKnight\Sprites\Goblin.gif'  # Đảm bảo thay thế bằng đường dẫn chính xác
+credit_bg_path = 'D:\SpiritKnight\Sprites/background_credit.jpg' # Thay thế bằng đường dẫn chính xác đến tệp ảnh nền của bạn
+options_image_path = 'D:\SpiritKnight\Sprites\Options_Background.jpg' # Thay thế bằng đường dẫn chính xác
 try:
     background_image = pygame.image.load(image_path)
     background_image = pygame.transform.scale(background_image, (width, height))  # Điều chỉnh kích thước ảnh nền nếu cần
@@ -42,6 +51,8 @@ try:
     logo_image = pygame.transform.scale(logo_image, (400, 200))  # Điều chỉnh kích thước logo nếu cần
     credit_background_image = pygame.image.load(credit_bg_path)
     credit_background_image = pygame.transform.scale(credit_background_image, (width, height))
+    options_background_image = pygame.image.load(options_image_path)
+    options_background_image = pygame.transform.scale(options_background_image, (width, height)) # Điều chỉnh kích thước ảnh nền nếu cần
 except pygame.error as e:
     print(f"Không thể tải hình ảnh: {e}")
     sys.exit()
@@ -57,9 +68,9 @@ def load_sprite_sheet(sheet, frame_width, frame_height, num_frames):
 
 # Tải sprite sheet và cắt các hình ảnh
 try:
-    start_sprite_sheet = pygame.image.load('D:\Start.png')
-    options_sprite_sheet = pygame.image.load('D:\Option.png')
-    quit_sprite_sheet = pygame.image.load('D:\Quit.png')
+    start_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Start.png')
+    options_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Option.png')
+    quit_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Quit.png')
 
     start_frames = load_sprite_sheet(start_sprite_sheet, 640, 100, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
     options_frames = load_sprite_sheet(options_sprite_sheet, 640, 100, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
@@ -84,10 +95,53 @@ class Button:
     def check_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
             self.pressed = True
+            click_sound.play() # Phát âm thanh khi nút được click
         if event.type == pygame.MOUSEBUTTONUP and self.rect.collidepoint(event.pos):
             self.pressed = False
             return True
         return False
+    
+# Tạo biến để lưu trạng thái của ô vuông
+music_on = True
+
+# Hàm để vẽ ô vuông và dấu tick
+def draw_checkbox(surface, pos, checked):
+    rect = pygame.Rect(pos, (30, 30))
+    pygame.draw.rect(surface, black, rect, 4) 
+    if checked:
+        pygame.draw.lines(surface, black, False, [(pos[0] + 5, pos[1] + 15), (pos[0] + 15, pos[1] + 25), (pos[0] + 25, pos[1] + 5)], 6) 
+
+# Hàm để xử lý bật/tắt nhạc khi tick vào ô vuông
+def toggle_music():
+    global music_on
+    music_on = not music_on
+    if music_on:
+        pygame.mixer.music.play(-1)
+    else:    
+        pygame.mixer.music.stop()
+
+# Cập nhật hàm để hiển thị ô vuông và gọi hàm toggle_music khi tick vào ô vuông
+def options_menu():
+    while True:
+        screen.blit(options_background_image, (0, 0)) # Hiển thị ảnh nền cho menu tùy chọn        
+        
+        # Hiển thị ô vuông và văn bản
+        draw_checkbox(screen, (width // 2 - 50, height // 2), music_on)
+        checkbox_text = credit_font.render('Music', True, black)
+        screen.blit(checkbox_text, (width // 2, height // 2))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pygame.Rect(width // 2 - 50, height // 2, 30, 30).collidepoint(event.pos):
+                    toggle_music()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return # Quay lại menu chính
+
+        pygame.display.flip()
 
 # Tạo văn bản cho nút Credit
 credit_font = pygame.font.Font(font_path, 50)
@@ -128,7 +182,7 @@ options_button = Button(options_frames, (width // 2, height // 2 + 50))
 quit_button = Button(quit_frames, (width // 2, height // 2 + 200))
 
 # Tải và phát nhạc nền
-music_path = 'D:\\Melancholic Walk.mp3'  # Thay thế bằng đường dẫn chính xác đến tệp nhạc của bạn
+music_path = 'D:\SpiritKnight\Music\Melancholic Walk.mp3'  # Thay thế bằng đường dẫn chính xác đến tệp nhạc của bạn
 try:
     pygame.mixer.music.load(music_path)
     pygame.mixer.music.play(-1)  # Phát nhạc lặp lại không ngừng
@@ -183,7 +237,7 @@ def main_menu():
                 return  # Thay bằng hàm bắt đầu trò chơi thực tế
             if options_button.check_click(event):
                 # Tùy chọn trò chơi
-                print("Options selected")  # Thay bằng hàm tùy chọn thực tế
+                options_menu() # Gọi hàm options_menu
             if quit_button.check_click(event):
                 pygame.quit()
                 sys.exit()
