@@ -4,9 +4,8 @@ from PIL import Image
 pygame.init()
 pygame.mixer.init()
 
-info = pygame.display.Info()
-width = info.current_w
-height = info.current_h
+width = 1280
+height = 720
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
@@ -60,14 +59,13 @@ Inv = pygame.transform.scale(Inv, (int(Inv.get_width()*scale_factor), int(Inv.ge
 Inv_rect = Inv.get_rect(topleft = (0,0))
 item_1 = pygame.image.load('D:/SpiritKnight/Sprites/mary1.png').convert_alpha()
 item_1_rect = item_1.get_rect(center = (75,78))
-bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
-bg = pygame.transform.scale(bg, (int(bg.get_width()*scale_factor), int(bg.get_height()*scale_factor)))
+bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
+#bg = pygame.transform.scale(bg, (int(bg.get_width()*scale_factor), int(bg.get_height()*scale_factor)))
 bg_rect = bg.get_rect(topleft = (0,0))
 
 while True:
-
     screen.fill((0, 0, 0))
-    
+
     screen.blit(bg, bg_rect)
     screen.blit(Hp_bar, Hp_rect)
     screen.blit(Inv, Inv_rect)
@@ -78,8 +76,11 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+    
     keys = pygame.key.get_pressed()
     moving = False
+    
+    # Điều khiển di chuyển nhân vật
     if keys[pygame.K_a]:
         char_rect.x -= 5
         flipped = False
@@ -90,23 +91,37 @@ while True:
         char_rect.y -= 5
     if keys[pygame.K_s]:
         char_rect.y += 5
+    
+    # Nhặt vật phẩm
     if keys[pygame.K_f] and not picked_up:
         if char_rect.colliderect(cross_rect):
             picked_up = True
             pick_up_sound.play()
+            # Đặt vị trí vật phẩm trong túi đồ
+            item_1_rect.center = (75, 78)
+
+    # Quăng vật phẩm
+    if keys[pygame.K_g] and picked_up:
+        picked_up = False
+        # Đặt vật phẩm gần nhân vật khi thả ra
+        cross_rect.center = (char_rect.centerx + 50, char_rect.centery)
+
+    # Hiển thị vật phẩm
     if not picked_up:
         screen.blit(cross_frames[cross_frame_index], cross_rect)
 
+    # Cập nhật khung hình
     frame_counter += 1
     if frame_counter >= frame_update_rate:
         frame_counter = 0
         frame_index = (frame_index + 1) % len(char_frames)
         cross_frame_index = (cross_frame_index + 1) % len(cross_frames)
+    
+    # Hiển thị nhân vật
     if flipped:
         screen.blit(flipped_frames[frame_index], char_rect)
     else:
         screen.blit(char_frames[frame_index], char_rect)
-
 
     pygame.display.flip()
     clock.tick(60)
