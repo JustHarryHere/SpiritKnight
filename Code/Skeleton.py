@@ -30,9 +30,9 @@ def load_gif_frames(gif_path):
     frames = []
     try:
         while True:
-            frame = gif.copy()
+            frame = gif.copy().convert('RGB')
             frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
-            gif.seek(len(frames))  # Move to next frame
+            gif.seek(gif.tell() + 1)
     except EOFError:
         pass
     return frames
