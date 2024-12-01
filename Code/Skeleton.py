@@ -65,11 +65,6 @@ flipped = False
 frame_index = 0
 frame_counter = 0
 frame_update_rate = 5
-is_attacking = False
-attack_frame_index = 0
-attack_timer = 0
-attack_duration = 1.0
-attack_frame_rate = 0.1
 
 # Main loop
 while True:
@@ -127,16 +122,6 @@ while True:
             arrow_rect.bottom < 0 or arrow_rect.top > HEIGHT):
             arrow_active = False
 
-    # Draw red line indicating arrow direction if not fired
-    if not arrow_active:
-        pygame.draw.line(screen, (255, 0, 0), enemy_rect.center, char_rect.center, 2)
-
-    # Update frame index for animations
-    frame_counter += 1
-    if frame_counter >= frame_update_rate:
-        frame_index = (frame_index + 1) % len(char_frames)
-        frame_counter = 0
-
     # Display character and enemy
     if flipped:
         flipped_frame = pygame.transform.flip(char_frames[frame_index], True, False)
@@ -149,6 +134,16 @@ while True:
     # Display arrow if active
     if arrow_active:
         screen.blit(arrow_image, arrow_rect)
+
+    # Draw red line indicating arrow direction if not fired (after drawing all elements)
+    if not arrow_active:
+        pygame.draw.line(screen, (255, 0, 0), enemy_rect.center, char_rect.center, 2)
+
+    # Update frame index for animations
+    frame_counter += 1
+    if frame_counter >= frame_update_rate:
+        frame_index = (frame_index + 1) % len(char_frames)
+        frame_counter = 0
 
     # Update screen
     pygame.display.flip()
