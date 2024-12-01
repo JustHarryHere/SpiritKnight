@@ -25,7 +25,7 @@ flipped_frames = [pygame.transform.flip(char_frame, True, False) for char_frame 
 char_rect = char_frames[0].get_rect(center=(width//2, height//2))
 
 # Enemy
-enemy_gif_path = 'D:\SpiritKnight\Sprites/black Wizard.gif'
+enemy_gif_path = 'D:/SpiritKnight/Sprites/black Wizard.gif'
 enemy_gif = Image.open(enemy_gif_path)
 enemy_frames = []
 try:
@@ -38,6 +38,13 @@ except EOFError:
     pass
 
 enemy_rect = enemy_frames[0].get_rect(center=(width//2 + 200, height//2))
+
+# Poison Bottle
+poison_image_path = 'D:\SpiritKnight\Sprites\Poisoncloud.gif'
+poison_image = pygame.image.load(poison_image_path)
+poison_rect = poison_image.get_rect(center=(enemy_rect.centerx, enemy_rect.centery))
+
+poison_thrown = False
 
 frame_index = 0
 frame_counter = 0
@@ -52,6 +59,7 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a]:
         char_rect.x -= 5
@@ -76,6 +84,19 @@ while True:
         enemy_frame_counter = 0
         enemy_frame_index = (enemy_frame_index + 1) % len(enemy_frames)
 
+    # Throw poison
+    if not poison_thrown:
+        poison_thrown = True
+        poison_rect = poison_image.get_rect(center=(enemy_rect.centerx, enemy_rect.centery))
+
+    if poison_thrown:
+        poison_rect.x -= 5  # Move the poison bottle to the left
+
+        # Check collision with character
+        if poison_rect.colliderect(char_rect):
+            print("Character hit by poison!")
+            poison_thrown = False
+
     # Display character
     if flipped:
         screen.blit(flipped_frames[frame_index], char_rect)
@@ -84,6 +105,10 @@ while True:
 
     # Display enemy
     screen.blit(enemy_frames[enemy_frame_index], enemy_rect)
+
+    # Display poison bottle
+    if poison_thrown:
+        screen.blit(poison_image, poison_rect)
 
     pygame.display.flip()
     clock.tick(60)
