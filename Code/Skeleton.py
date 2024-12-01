@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 # File paths
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
 enemy_gif_path = 'D:/SpiritKnight/Sprites/Skele.gif'
-enemy_attack_gif_path = 'D:\SpiritKnight\Sprites\Skeleshoot.gif'  # Path to the attack animation GIF
+enemy_attack_gif_path = 'D:/SpiritKnight/Sprites/Skeleshoot.gif'
 arrow_image_path = 'D:/SpiritKnight/Sprites/arrow.png'
 
 # Check if files exist
@@ -60,6 +60,8 @@ hitbox_scale = 0.7  # Hitbox 70% of original size
 char_hitbox = char_rect.inflate(-char_rect.width * (1 - hitbox_scale), -char_rect.height * (1 - hitbox_scale))
 
 # Other variables
+ideal_distance = 500  # Khoảng cách lý tưởng giữa quái vật và nhân vật
+enemy_speed = 3
 arrow_speed = 15
 arrow_active = False
 last_arrow_time = 0
@@ -100,6 +102,22 @@ while True:
 
     # Update hitbox to match character position
     char_hitbox.center = char_rect.center
+
+    # Move enemy to maintain distance from character if not attacking
+    if not is_attacking:
+        dx = char_rect.centerx - enemy_rect.centerx
+        dy = char_rect.centery - enemy_rect.centery
+        distance = math.hypot(dx, dy)
+        if distance < ideal_distance:
+            move_x = (dx / distance) * -enemy_speed
+            move_y = (dy / distance) * -enemy_speed
+            enemy_rect.x += move_x
+            enemy_rect.y += move_y
+        elif distance > ideal_distance:
+            move_x = (dx / distance) * enemy_speed
+            move_y = (dy / distance) * enemy_speed
+            enemy_rect.x += move_x
+            enemy_rect.y += move_y
 
     # Initialize attack if cooldown has passed
     current_time = time.time()
@@ -146,15 +164,29 @@ while True:
     else:
         screen.blit(char_frames[frame_index], char_rect)
 
+    # Determine if the enemy should be flipped
+    enemy_flipped = char_rect.centerx > enemy_rect.centerx  # Đảo ngược điều kiện
+    if enemy_flipped:
+        rotated_enemy_image = pygame.transform.flip(enemy_frames[frame_index % len(enemy_frames)], True, False)
+        rotated_enemy_attack_image = pygame.transform.flip(enemy_attack_frames[attack_frame_index], True, False)
+    else:
+        rotated_enemy_image = enemy_frames[frame_index % len(enemy_frames)]
+        rotated_enemy_attack_image = enemy_attack_frames[attack_frame_index]
+        
+    rotated_enemy_rect = rotated_enemy_image.get_rect(center=enemy_rect.center)
+
     # Display enemy attack animation if attacking, otherwise display normal enemy frame
     if is_attacking:
-        screen.blit(enemy_attack_frames[attack_frame_index], enemy_rect)
+        screen.blit(rotated_enemy_attack_image, rotated_enemy_rect)
     else:
-        screen.blit(enemy_frames[frame_index % len(enemy_frames)], enemy_rect)
+        screen.blit(rotated_enemy_image, rotated_enemy_rect)
 
-    # Display arrow if active
+    # Rotate arrow
     if arrow_active:
-        screen.blit(arrow_image, arrow_rect)
+        arrow_angle = math.degrees(math.atan2(arrow_dy, arrow_dx))
+        rotated_arrow_image = pygame.transform.rotate(arrow_image, -arrow_angle)
+        rotated_arrow_rect = rotated_arrow_image.get_rect(center=arrow_rect.center)
+        screen.blit(rotated_arrow_image, rotated_arrow_rect)
 
     # Draw red line indicating arrow direction if not fired (after drawing all elements)
     if not arrow_active:
