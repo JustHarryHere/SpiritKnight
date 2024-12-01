@@ -48,6 +48,10 @@ frame_counter = 0
 boss_frame_counter = 0
 frame_update_rate = 5
 flipped = False
+max_hp = 200
+remaining_hp = max_hp
+hp_ratio = remaining_hp/max_hp
+
 
 #PNG
 scale_factor = 0.5
@@ -82,6 +86,8 @@ while True:
     screen.blit(bg, bg_rect)
     screen.blit(Hp_bar, Hp_bar_rect)
     screen.blit(boss_health,boss_health_rect)
+    pygame.draw.rect(screen, (255,0,0), (width//2-400,height//2 - 100,200,30))
+    pygame.draw.rect(screen, (0,255,0), (width//2-400,height//2-100,200*hp_ratio,30))
     #screen.blit(knife, knife_rect)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -160,45 +166,97 @@ while True:
     for knife_rect in knives_left:
         knife_rect.x -= knife_speed
         screen.blit(knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x < 0:
+            knives_left.remove(knife_rect)
+
 
     # Update knife positions (right)
     for rotated_knife, knife_rect in knives_right:
         knife_rect.x += knife_speed
         screen.blit(rotated_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x > width:
+            knives_right.remove((rotated_knife, knife_rect))
+
 
     # Update knife positions (up)
     for up_knife, knife_rect in knives_up:
         knife_rect.y -= knife_speed
-        screen.blit(up_knife, knife_rect) 
+        screen.blit(up_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.y < 0:
+            knives_up.remove((up_knife, knife_rect))
+
 
     # Update knife positions (down)
     for down_knife, knife_rect in knives_down:
         knife_rect.y += knife_speed
-        screen.blit(down_knife, knife_rect) 
+        screen.blit(down_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.y > height:
+            knives_down.remove((down_knife, knife_rect))
+
 
     # Update knife positions (bottom left)
     for bottom_left_knife, knife_rect in knives_bottom_left:
         knife_rect.x -= knife_speed_2
         knife_rect.y += knife_speed_2
         screen.blit(bottom_left_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x < 0 or knife_rect.y > height:
+            knives_bottom_left.remove((bottom_left_knife, knife_rect))
 
     # Update knife positions (bottom right)
     for bottom_right_knife, knife_rect in knives_bottom_right:
         knife_rect.x += knife_speed_2
         knife_rect.y += knife_speed_2
         screen.blit(bottom_right_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x > width or knife_rect.y > height:
+            knives_bottom_right.remove((bottom_right_knife, knife_rect))
 
     # Update knife positions (top right)
     for top_right_knife, knife_rect in knives_top_right:
         knife_rect.x += knife_speed_2
         knife_rect.y -= knife_speed_2
         screen.blit(top_right_knife, knife_rect)
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x > width or knife_rect.y < 0:
+            knives_top_right.remove((top_right_knife, knife_rect))
 
     # Update knife positions (top left)
     for top_left_knife, knife_rect in knives_top_left:
         knife_rect.x -= knife_speed_2
         knife_rect.y -= knife_speed_2
         screen.blit(top_left_knife, knife_rect)
-
+        if char_rect.colliderect(knife_rect):
+            knife_rect.topleft = (-1000,-100)
+            remaining_hp -= 10
+            hp_ratio = remaining_hp / max_hp
+        elif knife_rect.x < 0 or knife_rect.y < 0:
+            knives_top_left.remove((top_left_knife, knife_rect))
+     
     pygame.display.flip()
     clock.tick(60)
