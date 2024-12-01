@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 # File paths
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
 enemy_gif_path = 'D:/SpiritKnight/Sprites/Skele.gif'
-enemy_attack_gif_path = 'D:\SpiritKnight\Sprites\Skeleshoot.gif'  # Path to the attack animation GIF
+enemy_attack_gif_path = 'D:/SpiritKnight/Sprites/Skeleshoot.gif'
 arrow_image_path = 'D:/SpiritKnight/Sprites/arrow.png'
 
 # Check if files exist
@@ -146,11 +146,22 @@ while True:
     else:
         screen.blit(char_frames[frame_index], char_rect)
 
+    # Determine if the enemy should be flipped
+    enemy_flipped = char_rect.centerx > enemy_rect.centerx  # Đảo ngược điều kiện
+    if enemy_flipped:
+        rotated_enemy_image = pygame.transform.flip(enemy_frames[frame_index % len(enemy_frames)], True, False)
+        rotated_enemy_attack_image = pygame.transform.flip(enemy_attack_frames[attack_frame_index], True, False)
+    else:
+        rotated_enemy_image = enemy_frames[frame_index % len(enemy_frames)]
+        rotated_enemy_attack_image = enemy_attack_frames[attack_frame_index]
+        
+    rotated_enemy_rect = rotated_enemy_image.get_rect(center=enemy_rect.center)
+
     # Display enemy attack animation if attacking, otherwise display normal enemy frame
     if is_attacking:
-        screen.blit(enemy_attack_frames[attack_frame_index], enemy_rect)
+        screen.blit(rotated_enemy_attack_image, rotated_enemy_rect)
     else:
-        screen.blit(enemy_frames[frame_index % len(enemy_frames)], enemy_rect)
+        screen.blit(rotated_enemy_image, rotated_enemy_rect)
 
     # Display arrow if active
     if arrow_active:
