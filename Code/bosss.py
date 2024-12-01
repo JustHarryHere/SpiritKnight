@@ -62,7 +62,7 @@ boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*s
 boss_health_rect = boss_health.get_rect(center = (width//2,60))
 knife = pygame.image.load('D:/SpiritKnight/Sprites/knife.png')
 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
-Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
+Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP1.png')
 Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
 Hp_bar_rect = Hp_bar.get_rect(topleft = (0,0))
 Hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/HP2.png')
@@ -171,7 +171,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0:
             knives_left.remove(knife_rect)
@@ -184,7 +184,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width:
             knives_right.remove((rotated_knife, knife_rect))
@@ -197,7 +197,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y < 0:
             knives_up.remove((up_knife, knife_rect))
@@ -210,7 +210,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y > height:
             knives_down.remove((down_knife, knife_rect))
@@ -224,7 +224,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y > height:
             knives_bottom_left.remove((bottom_left_knife, knife_rect))
@@ -237,7 +237,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y > height:
             knives_bottom_right.remove((bottom_right_knife, knife_rect))
@@ -250,7 +250,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y < 0:
             knives_top_right.remove((top_right_knife, knife_rect))
@@ -263,7 +263,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 10
+            remaining_hp -= 5
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y < 0:
             knives_top_left.remove((top_left_knife, knife_rect))
