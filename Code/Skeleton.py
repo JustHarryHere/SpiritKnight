@@ -17,10 +17,11 @@ clock = pygame.time.Clock()
 # File paths
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
 enemy_gif_path = 'D:/SpiritKnight/Sprites/Skele.gif'
+enemy_attack_gif_path = 'D:\SpiritKnight\Sprites\Skeleshoot.gif'  # Path to the attack animation GIF
 arrow_image_path = 'D:/SpiritKnight/Sprites/arrow.png'
 
 # Check if files exist
-if not all(os.path.exists(path) for path in [character_gif_path, enemy_gif_path, arrow_image_path]):
+if not all(os.path.exists(path) for path in [character_gif_path, enemy_gif_path, enemy_attack_gif_path, arrow_image_path]):
     print("One or more files do not exist!")
     sys.exit()
 
@@ -42,6 +43,9 @@ char_frames = load_gif_frames(character_gif_path)
 
 # Load enemy GIF frames
 enemy_frames = load_gif_frames(enemy_gif_path)
+
+# Load enemy attack GIF frames
+enemy_attack_frames = load_gif_frames(enemy_attack_gif_path)
 
 # Load arrow image
 arrow_image = pygame.image.load(arrow_image_path)
@@ -65,6 +69,11 @@ flipped = False
 frame_index = 0
 frame_counter = 0
 frame_update_rate = 5
+is_attacking = False
+attack_frame_index = 0
+attack_timer = 0
+attack_duration = 1.0
+attack_frame_rate = 0.2
 
 # Main loop
 while True:
@@ -92,20 +101,28 @@ while True:
     # Update hitbox to match character position
     char_hitbox.center = char_rect.center
 
-    # Initialize arrow if not active and cooldown has passed
+    # Initialize attack if cooldown has passed
     current_time = time.time()
-    if not arrow_active and current_time - last_arrow_time > arrow_cooldown:
-        arrow_rect.center = enemy_rect.center
-        arrow_active = True
-        last_arrow_time = current_time
+    if not arrow_active and not is_attacking and current_time - last_arrow_time > arrow_cooldown:
+        is_attacking = True
+        attack_timer = current_time  # Start attack timer
 
-        # Set arrow direction
-        arrow_dx = char_rect.centerx - enemy_rect.centerx
-        arrow_dy = char_rect.centery - enemy_rect.centery
-        distance = math.hypot(arrow_dx, arrow_dy)
-        if distance != 0:
-            arrow_dx /= distance
-            arrow_dy /= distance
+    # Handle attack animation and arrow activation
+    if is_attacking:
+        attack_frame_index = int((current_time - attack_timer) / attack_frame_rate) % len(enemy_attack_frames)
+        if current_time - attack_timer >= attack_duration:
+            is_attacking = False
+            arrow_active = True
+            last_arrow_time = current_time
+
+            # Set arrow direction and initial position
+            arrow_rect.center = enemy_rect.center
+            arrow_dx = char_rect.centerx - enemy_rect.centerx
+            arrow_dy = char_rect.centery - enemy_rect.centery
+            distance = math.hypot(arrow_dx, arrow_dy)
+            if distance != 0:
+                arrow_dx /= distance
+                arrow_dy /= distance
 
     # Move arrow
     if arrow_active:
@@ -122,14 +139,18 @@ while True:
             arrow_rect.bottom < 0 or arrow_rect.top > HEIGHT):
             arrow_active = False
 
-    # Display character and enemy
+    # Display character
     if flipped:
         flipped_frame = pygame.transform.flip(char_frames[frame_index], True, False)
         screen.blit(flipped_frame, char_rect)
     else:
         screen.blit(char_frames[frame_index], char_rect)
 
-    screen.blit(enemy_frames[frame_index % len(enemy_frames)], enemy_rect)
+    # Display enemy attack animation if attacking, otherwise display normal enemy frame
+    if is_attacking:
+        screen.blit(enemy_attack_frames[attack_frame_index], enemy_rect)
+    else:
+        screen.blit(enemy_frames[frame_index % len(enemy_frames)], enemy_rect)
 
     # Display arrow if active
     if arrow_active:
