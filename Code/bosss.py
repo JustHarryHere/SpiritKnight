@@ -51,6 +51,7 @@ flipped = False
 max_hp = 100
 remaining_hp = max_hp
 hp_ratio = remaining_hp/max_hp
+dmg = 10
 
 
 #PNG
@@ -171,7 +172,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0:
             knives_left.remove(knife_rect)
@@ -184,7 +185,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width:
             knives_right.remove((rotated_knife, knife_rect))
@@ -197,7 +198,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y < 0:
             knives_up.remove((up_knife, knife_rect))
@@ -210,7 +211,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y > height:
             knives_down.remove((down_knife, knife_rect))
@@ -224,7 +225,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y > height:
             knives_bottom_left.remove((bottom_left_knife, knife_rect))
@@ -237,7 +238,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5 
+            remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y > height:
             knives_bottom_right.remove((bottom_right_knife, knife_rect))
@@ -250,7 +251,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y < 0:
             knives_top_right.remove((top_right_knife, knife_rect))
@@ -263,7 +264,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
-            remaining_hp -= 5
+            remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y < 0:
             knives_top_left.remove((top_left_knife, knife_rect))
@@ -274,6 +275,22 @@ while True:
         Hp_2_partial = Hp_2.subsurface((Hp_2_rect.width - health_width, 0, health_width, Hp_2_rect.height))
         screen.blit(Hp_2_partial, remaining_health_rect)
 
-     
+    # Font for displaying remaining HP
+    font = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
+    hp_text_black = font.render(f"{remaining_hp}/{max_hp}", True, (0, 0, 0))  # Màu đen
+    hp_text_rect = hp_text_black.get_rect(center=(240, 40))
+    hp_text_white = font.render(f"{remaining_hp}/{max_hp}", True, (255, 255, 255))  # Màu trắng
+    screen.blit(hp_text_black, hp_text_rect.move(2, 2))  
+    screen.blit(hp_text_white, hp_text_rect)
+
+    if remaining_hp <= 0:
+        game_over = True
+        font_die = pygame.font.Font('D:/SpiritKnight/Font/Pixelmax-Regular.otf', 100)
+        text_die_black = font_die.render(f"GAME OVER!", True, (0, 0, 0))  # Màu đen
+        text_die_rect = text_die_black.get_rect(center = (width//2, height//2 - 200))
+        text_die_white = font_die.render(f"GAME OVER!", True, (255, 255, 255))  # Màu trắng
+        screen.blit(text_die_black, text_die_rect.move(10,10))
+        screen.blit(text_die_white, text_die_rect)
+
     pygame.display.flip()
     clock.tick(60)
