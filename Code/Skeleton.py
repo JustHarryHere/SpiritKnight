@@ -6,138 +6,150 @@ import math
 import time
 from PIL import Image
 
-# Khởi tạo pygame
+# Initialize pygame
 pygame.init()
 
-# Kích thước màn hình
+# Screen dimensions
 WIDTH, HEIGHT = 1280, 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-# Đường dẫn tệp
+# File paths
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
-enemy_attack_gif_path = 'D:\SpiritKnight\Sprites\Skeleshoot.gif'
+enemy_gif_path = 'D:/SpiritKnight/Sprites/Skele.gif'
 arrow_image_path = 'D:/SpiritKnight/Sprites/arrow.png'
 
-# Kiểm tra tệp tồn tại
-if not all(os.path.exists(path) for path in [character_gif_path, enemy_attack_gif_path, arrow_image_path]):
-    print("Một hoặc nhiều tệp không tồn tại!")
+# Check if files exist
+if not all(os.path.exists(path) for path in [character_gif_path, enemy_gif_path, arrow_image_path]):
+    print("One or more files do not exist!")
     sys.exit()
 
-# Hàm load các khung từ GIF
+# Function to load GIF frames using Pillow
 def load_gif_frames(gif_path):
     gif = Image.open(gif_path)
     frames = []
     try:
         while True:
-            frame = gif.convert('RGBA')
-            frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, 'RGBA'))
-            gif.seek(gif.tell() + 1)
+            frame = gif.copy()
+            frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+            gif.seek(len(frames))  # Move to next frame
     except EOFError:
         pass
     return frames
 
-# Load ảnh nhân vật (chỉ 1 khung cho đơn giản)
-character_image = pygame.image.load(character_gif_path).convert_alpha()
-char_rect = character_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+# Load character GIF frames
+char_frames = load_gif_frames(character_gif_path)
 
-# Load hoạt ảnh tấn công của quái vật
-enemy_attack_frames = load_gif_frames(enemy_attack_gif_path)
-enemy_rect = enemy_attack_frames[0].get_rect(center=(random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100)))
+# Load enemy GIF frames
+enemy_frames = load_gif_frames(enemy_gif_path)
 
-# Load ảnh mũi tên
-arrow_image = pygame.image.load(arrow_image_path).convert_alpha()
+# Load arrow image
+arrow_image = pygame.image.load(arrow_image_path)
 arrow_rect = arrow_image.get_rect()
 
-# Các biến của quái vật
-is_attacking = False      # Trạng thái tấn công
-attack_frame_index = 0    # Khung hiện tại của hoạt ảnh tấn công
-attack_timer = 0          # Bộ đếm thời gian cho hoạt ảnh tấn công
-attack_duration = 1.0     # Thời gian hoạt ảnh tấn công (giây)
-attack_frame_rate = 0.7   # Thời gian giữa các khung (giây)
+# Character and enemy positions
+char_rect = char_frames[0].get_rect(center=(WIDTH // 2, HEIGHT // 2))
+enemy_rect = enemy_frames[0].get_rect(center=(random.randint(0, WIDTH), random.randint(0, HEIGHT)))
 
-# Các biến mũi tên
-arrow_active = False
-arrow_dx, arrow_dy = 0, 0
+# Scale down character hitbox
+hitbox_scale = 0.7  # Hitbox 70% of original size
+char_hitbox = char_rect.inflate(-char_rect.width * (1 - hitbox_scale), -char_rect.height * (1 - hitbox_scale))
+
+# Other variables
 arrow_speed = 15
-arrow_cooldown = 4  # Cooldown 2 giây
+arrow_active = False
 last_arrow_time = 0
+arrow_cooldown = 2  # Cooldown 2 seconds
+arrow_dx, arrow_dy = 0, 0
+flipped = False
+frame_index = 0
+frame_counter = 0
+frame_update_rate = 5
+is_attacking = False
+attack_frame_index = 0
+attack_timer = 0
+attack_duration = 1.0
+attack_frame_rate = 0.1
 
-# Vòng lặp chính
+# Main loop
 while True:
-    screen.fill((0, 0, 0))  # Xóa màn hình
+    screen.fill((0, 0, 0))  # Clear screen
 
-    # Xử lý sự kiện
+    # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-    # Di chuyển nhân vật
+    # Move character
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a]:
         char_rect.x -= 5
+        flipped = True
     if keys[pygame.K_d]:
         char_rect.x += 5
+        flipped = False
     if keys[pygame.K_w]:
         char_rect.y -= 5
     if keys[pygame.K_s]:
         char_rect.y += 5
 
-    # Thời gian hiện tại
+    # Update hitbox to match character position
+    char_hitbox.center = char_rect.center
+
+    # Initialize arrow if not active and cooldown has passed
     current_time = time.time()
+    if not arrow_active and current_time - last_arrow_time > arrow_cooldown:
+        arrow_rect.center = enemy_rect.center
+        arrow_active = True
+        last_arrow_time = current_time
 
-    # Xử lý trạng thái tấn công của quái vật
-    if is_attacking:
-        # Hiển thị hoạt ảnh tấn công
-        if current_time - attack_timer > attack_frame_rate:
-            attack_frame_index = (attack_frame_index + 1) % len(enemy_attack_frames)
-            attack_timer = current_time
+        # Set arrow direction
+        arrow_dx = char_rect.centerx - enemy_rect.centerx
+        arrow_dy = char_rect.centery - enemy_rect.centery
+        distance = math.hypot(arrow_dx, arrow_dy)
+        if distance != 0:
+            arrow_dx /= distance
+            arrow_dy /= distance
 
-        # Vẽ khung hiện tại
-        screen.blit(enemy_attack_frames[attack_frame_index], enemy_rect)
-
-        # Nếu hoạt ảnh tấn công kết thúc, bắn tên
-        if current_time - last_arrow_time >= attack_duration:
-            is_attacking = False  # Kết thúc tấn công
-            arrow_active = True   # Chuẩn bị bắn tên
-            last_arrow_time = current_time
-
-            # Tính toán hướng bắn
-            arrow_rect.center = enemy_rect.center
-            arrow_dx = char_rect.centerx - enemy_rect.centerx
-            arrow_dy = char_rect.centery - enemy_rect.centery
-            distance = math.hypot(arrow_dx, arrow_dy)
-            if distance != 0:
-                arrow_dx /= distance
-                arrow_dy /= distance
-    else:
-        # Nếu không tấn công, bắt đầu tấn công sau cooldown
-        screen.blit(enemy_attack_frames[0], enemy_rect)  # Quái vật trạng thái đứng yên
-        if not arrow_active and current_time - last_arrow_time > arrow_cooldown:
-            is_attacking = True
-            attack_timer = current_time
-            attack_frame_index = 0  # Reset khung hoạt ảnh tấn công
-
-    # Di chuyển và hiển thị mũi tên
+    # Move arrow
     if arrow_active:
         arrow_rect.x += arrow_dx * arrow_speed
         arrow_rect.y += arrow_dy * arrow_speed
-        screen.blit(arrow_image, arrow_rect)
 
-        # Kiểm tra nếu mũi tên ra khỏi màn hình
+        # Check collision with character hitbox
+        if char_hitbox.colliderect(arrow_rect):
+            print("Character hit by arrow!")
+            arrow_active = False
+
+        # Check if arrow is off screen
         if (arrow_rect.right < 0 or arrow_rect.left > WIDTH or
             arrow_rect.bottom < 0 or arrow_rect.top > HEIGHT):
             arrow_active = False
 
-        # Kiểm tra va chạm với nhân vật
-        if char_rect.colliderect(arrow_rect):
-            print("Nhân vật bị trúng mũi tên!")
-            arrow_active = False
+    # Draw red line indicating arrow direction if not fired
+    if not arrow_active:
+        pygame.draw.line(screen, (255, 0, 0), enemy_rect.center, char_rect.center, 2)
 
-    # Vẽ nhân vật
-    screen.blit(character_image, char_rect)
+    # Update frame index for animations
+    frame_counter += 1
+    if frame_counter >= frame_update_rate:
+        frame_index = (frame_index + 1) % len(char_frames)
+        frame_counter = 0
 
-    # Cập nhật màn hình
+    # Display character and enemy
+    if flipped:
+        flipped_frame = pygame.transform.flip(char_frames[frame_index], True, False)
+        screen.blit(flipped_frame, char_rect)
+    else:
+        screen.blit(char_frames[frame_index], char_rect)
+
+    screen.blit(enemy_frames[frame_index % len(enemy_frames)], enemy_rect)
+
+    # Display arrow if active
+    if arrow_active:
+        screen.blit(arrow_image, arrow_rect)
+
+    # Update screen
     pygame.display.flip()
     clock.tick(60)
