@@ -48,7 +48,7 @@ frame_counter = 0
 boss_frame_counter = 0
 frame_update_rate = 5
 flipped = False
-max_hp = 200
+max_hp = 100
 remaining_hp = max_hp
 hp_ratio = remaining_hp/max_hp
 
@@ -65,10 +65,13 @@ knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get
 Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
 Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
 Hp_bar_rect = Hp_bar.get_rect(topleft = (0,0))
+Hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/HP2.png')
+Hp_2 = pygame.transform.scale(Hp_2, (int(Hp_2.get_width()*scale_factor), int(Hp_2.get_height()*scale_factor)))
+Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 
 # Knife variables
 knife_speed = 10
-knife_speed_2 = 9 
+knife_speed_2 = 9
 knife_timer = 0
 knife_interval = 2000  # 2 seconds in milliseconds
 knives_left = []  # Knives moving to the left
@@ -86,8 +89,7 @@ while True:
     screen.blit(bg, bg_rect)
     screen.blit(Hp_bar, Hp_bar_rect)
     screen.blit(boss_health,boss_health_rect)
-    pygame.draw.rect(screen, (255,0,0), (width//2-400,height//2 - 100,200,30))
-    pygame.draw.rect(screen, (0,255,0), (width//2-400,height//2-100,200*hp_ratio,30))
+    #screen.blit(Hp_2, )
     #screen.blit(knife, knife_rect)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -166,7 +168,8 @@ while True:
     for knife_rect in knives_left:
         knife_rect.x -= knife_speed
         screen.blit(knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -178,7 +181,8 @@ while True:
     for rotated_knife, knife_rect in knives_right:
         knife_rect.x += knife_speed
         screen.blit(rotated_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -190,7 +194,8 @@ while True:
     for up_knife, knife_rect in knives_up:
         knife_rect.y -= knife_speed
         screen.blit(up_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -202,7 +207,8 @@ while True:
     for down_knife, knife_rect in knives_down:
         knife_rect.y += knife_speed
         screen.blit(down_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -212,10 +218,11 @@ while True:
 
     # Update knife positions (bottom left)
     for bottom_left_knife, knife_rect in knives_bottom_left:
-        knife_rect.x -= knife_speed_2
+        knife_rect.x -= knife_speed_2 
         knife_rect.y += knife_speed_2
         screen.blit(bottom_left_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -227,7 +234,8 @@ while True:
         knife_rect.x += knife_speed_2
         knife_rect.y += knife_speed_2
         screen.blit(bottom_right_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -239,7 +247,8 @@ while True:
         knife_rect.x += knife_speed_2
         knife_rect.y -= knife_speed_2
         screen.blit(top_right_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
@@ -251,12 +260,20 @@ while True:
         knife_rect.x -= knife_speed_2
         knife_rect.y -= knife_speed_2
         screen.blit(top_left_knife, knife_rect)
-        if char_rect.colliderect(knife_rect):
+        pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
+        if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             remaining_hp -= 10
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y < 0:
             knives_top_left.remove((top_left_knife, knife_rect))
+
+    health_width = int(Hp_2_rect.width * (1 - hp_ratio))    
+    if health_width > 0:
+        remaining_health_rect = pygame.Rect(Hp_2_rect.right - health_width, Hp_2_rect.top, health_width, Hp_2_rect.height)
+        Hp_2_partial = Hp_2.subsurface((Hp_2_rect.width - health_width, 0, health_width, Hp_2_rect.height))
+        screen.blit(Hp_2_partial, remaining_health_rect)
+
      
     pygame.display.flip()
     clock.tick(60)
