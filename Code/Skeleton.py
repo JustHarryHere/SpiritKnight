@@ -51,6 +51,9 @@ enemy_attack_frames = load_gif_frames(enemy_attack_gif_path)
 arrow_image = pygame.image.load(arrow_image_path)
 arrow_rect = arrow_image.get_rect()
 
+# Create a smaller hitbox for the arrow
+arrow_hitbox = arrow_rect.inflate(-arrow_rect.width * 0.5, -arrow_rect.height * 0.5)  # 50% smaller
+
 # Character and enemy positions
 char_rect = char_frames[0].get_rect(center=(WIDTH // 2, HEIGHT // 2))
 enemy_rect = enemy_frames[0].get_rect(center=(random.randint(0, WIDTH), random.randint(0, HEIGHT)))
@@ -146,9 +149,12 @@ while True:
     if arrow_active:
         arrow_rect.x += arrow_dx * arrow_speed
         arrow_rect.y += arrow_dy * arrow_speed
+        
+        # Update the hitbox position
+        arrow_hitbox.center = arrow_rect.center
 
         # Check collision with character hitbox
-        if char_hitbox.colliderect(arrow_rect):
+        if char_hitbox.colliderect(arrow_hitbox):
             print("Character hit by arrow!")
             arrow_active = False
 
