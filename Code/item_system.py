@@ -10,7 +10,10 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
 # Dùng cho stack item
+# Stack cho slot 1
 item_count = 0
+# stack cho slot 2
+item2_count = 0
 
 #Char
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
@@ -95,13 +98,19 @@ while True:
         char_rect.y += 5
     
     # Nhặt vật phẩm
-    if keys[pygame.K_f] and item_count < 2 and not picked_up:
+    if keys[pygame.K_f] and not picked_up:
         item_count += 1
         if char_rect.colliderect(cross_rect):
             picked_up = True
             pick_up_sound.play()
             # Đặt vị trí vật phẩm trong túi đồ
-            item_1_rect.center = (75, 78)
+            # Slot 1
+            if item_count <= 2:
+               item_1_rect.center = (75, 78)
+            # Slot 2
+            if item_count > 2:
+                item2_count += 1
+                item_1_rect.center = (115, 78)
 
     # Quăng vật phẩm
     if keys[pygame.K_g] and picked_up:
