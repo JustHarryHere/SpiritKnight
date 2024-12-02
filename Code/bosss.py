@@ -23,6 +23,19 @@ except EOFError:
 
 flipped_frames = [pygame.transform.flip(frame, True, False) for frame in char_frames]
 
+# Load sprite_sheet tấn công
+attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
+attack_frames = []
+sprite_width, sprite_height = attack_sprite_sheet.get_width() // 6, attack_sprite_sheet.get_height()
+
+# Assuming 6 frames in the sprite sheet
+for i in range(6):
+    frame = attack_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+    attack_frames.append(frame)
+
+# Xoay frame tấn công
+flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in attack_frames]
+
 # Load boss GIF
 boss_gif_path = 'D:/SpiritKnight/Sprites/test_boss.gif'
 boss_gif = Image.open(boss_gif_path)
@@ -47,11 +60,15 @@ boss_frame_index = 0
 frame_counter = 0
 boss_frame_counter = 0
 frame_update_rate = 5
+attack_frame_rate = 2
 flipped = False
 max_hp = 100
 remaining_hp = max_hp
 hp_ratio = remaining_hp/max_hp
 dmg = 10
+attack_frame_counter = 0
+attack_frame_index = 0
+attacking = False
 
 
 #PNG
@@ -74,7 +91,7 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 knife_speed = 10
 knife_speed_2 = 9
 knife_timer = 0
-knife_interval = 2000  # 2 seconds in milliseconds
+knife_interval = 8000  # 8 seconds in milliseconds
 knives_left = []  # Knives moving to the left
 knives_right = []  # Knives moving to the right
 knives_up = []
@@ -90,12 +107,14 @@ while True:
     screen.blit(bg, bg_rect)
     screen.blit(Hp_bar, Hp_bar_rect)
     screen.blit(boss_health,boss_health_rect)
-    #screen.blit(Hp_2, )
-    #screen.blit(knife, knife_rect)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Chuột phải
+            attacking = True
+            attack_frame_index = 0
+            attack_frame_counter = 0
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a]:
@@ -109,17 +128,29 @@ while True:
     if keys[pygame.K_s]:
         char_rect.y += 5
 
-    # Update character frame
-    frame_counter += 1
-    if frame_counter >= frame_update_rate:
-        frame_counter = 0
-        frame_index = (frame_index + 1) % len(char_frames)
-
-    # Display character
-    if flipped:
-        screen.blit(flipped_frames[frame_index], char_rect)
+    if attacking:
+        attack_frame_counter += 1
+        if attack_frame_counter >= attack_frame_rate:
+            attack_frame_counter = 0
+            attack_frame_index += 1
+            if attack_frame_index >= len(attack_frames):
+                attacking = False  # Kết thúc hoạt ảnh tấn công
+                attack_frame_index = 0
+        if flipped:
+            attack_frame = pygame.transform.flip(attack_frames[attack_frame_index], True, False)
+        else:
+            attack_frame = attack_frames[attack_frame_index]
+        screen.blit(attack_frame, char_rect)
     else:
-        screen.blit(char_frames[frame_index], char_rect)
+        frame_counter += 1
+        if frame_counter >= frame_update_rate:
+            frame_counter = 0
+            frame_index = (frame_index + 1) % len(char_frames)
+
+        if flipped:
+            screen.blit(flipped_frames[frame_index], char_rect)
+        else:
+            screen.blit(char_frames[frame_index], char_rect)
 
     # Update boss frame
     boss_frame_counter += 1
