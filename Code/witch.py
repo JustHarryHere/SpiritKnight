@@ -40,11 +40,18 @@ except EOFError:
 enemy_rect = enemy_frames[0].get_rect(center=(width//2 + 200, height//2))
 
 # Poison Bottle
-poison_image_path = 'D:\SpiritKnight\Sprites\Poisoncloud.gif'
+poison_image_path = 'D:/SpiritKnight/Sprites/Poisoncloud.gif'
 poison_image = pygame.image.load(poison_image_path)
+
+# Poison Pool
+poison_pool_image_path = 'D:/SpiritKnight/Sprites/Poisonpool.png'
+poison_pool_image = pygame.image.load(poison_pool_image_path)
+poison_pools = []
+
 poison_rect = poison_image.get_rect(center=(enemy_rect.centerx, enemy_rect.centery))
 
 poison_thrown = False
+poison_timer = pygame.time.get_ticks()
 
 frame_index = 0
 frame_counter = 0
@@ -84,10 +91,12 @@ while True:
         enemy_frame_counter = 0
         enemy_frame_index = (enemy_frame_index + 1) % len(enemy_frames)
 
-    # Throw poison
-    if not poison_thrown:
+    # Throw poison every 4 seconds
+    current_time = pygame.time.get_ticks()
+    if current_time - poison_timer >= 4000:  # 4 seconds in milliseconds
         poison_thrown = True
         poison_rect = poison_image.get_rect(center=(enemy_rect.centerx, enemy_rect.centery))
+        poison_timer = current_time
 
     if poison_thrown:
         poison_rect.x -= 5  # Move the poison bottle to the left
@@ -95,6 +104,7 @@ while True:
         # Check collision with character
         if poison_rect.colliderect(char_rect):
             print("Character hit by poison!")
+            poison_pools.append(poison_pool_image.get_rect(center=char_rect.center))
             poison_thrown = False
 
     # Display character
@@ -109,6 +119,10 @@ while True:
     # Display poison bottle
     if poison_thrown:
         screen.blit(poison_image, poison_rect)
+
+    # Display poison pools
+    for poison_pool_rect in poison_pools:
+        screen.blit(poison_pool_image, poison_pool_rect)
 
     pygame.display.flip()
     clock.tick(60)
