@@ -142,7 +142,7 @@ while True:
         if poison_frame_timer >= poison_frame_duration:
             poison_frame_timer = 0
             poison_frame_index = (poison_frame_index + 1) % len(poison_frames)
-        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0] + 4, warning_circle_position[1] + 4))  
+        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0] - 10, warning_circle_position[1] + 10))  # Shift left by 10 pixels, down by 10 pixels
         screen.blit(poison_frames[poison_frame_index], poison_rect)
         if poison_frame_index == len(poison_frames) - 1:
             show_poison_gif = False
