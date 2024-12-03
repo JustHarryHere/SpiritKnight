@@ -2,6 +2,7 @@ import pygame, sys
 from PIL import Image
 
 pygame.init()
+pygame.mixer.init()
 
 width = 1280
 height = 720
@@ -69,15 +70,24 @@ dmg = 10
 attack_frame_counter = 0
 attack_frame_index = 0
 attacking = False
+char_dmg = 50
+boss_max_hp = 500
+boss_remaining_hp = boss_max_hp
+boss_hp_ratio = boss_remaining_hp/boss_max_hp
+boss_hit_timer = 0
+boss_hit_delay = 500
 
 
 #PNG
 scale_factor = 0.5
 bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
 bg_rect = bg.get_rect(topleft = (0,0))
-boss_health = pygame.image.load('D:/SpiritKnight/Sprites/boss_health.png')
-boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*scale_factor), int(boss_health.get_height()*scale_factor)))
-boss_health_rect = boss_health.get_rect(center = (width//2,60))
+boss_health = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP1.png')
+boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*0.7), int(boss_health.get_height()*0.7)))
+boss_health_rect = boss_health.get_rect(center = (width//2,50))
+boss_hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP2.png')
+boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*0.7), int(boss_hp_2.get_height()*0.7)))
+boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,50))
 knife = pygame.image.load('D:/SpiritKnight/Sprites/knife.png')
 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
 Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP1.png')
@@ -91,7 +101,7 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 knife_speed = 10
 knife_speed_2 = 9
 knife_timer = 0
-knife_interval = 8000  # 8 seconds in milliseconds
+knife_interval = 5000 # 8 seconds in milliseconds
 knives_left = []  # Knives moving to the left
 knives_right = []  # Knives moving to the right
 knives_up = []
@@ -100,6 +110,9 @@ knives_bottom_left = []
 knives_bottom_right = []
 knives_top_right = []
 knives_top_left = []
+
+#Sound 
+attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
 
 while True:
     current_time = pygame.time.get_ticks()
@@ -115,6 +128,7 @@ while True:
             attacking = True
             attack_frame_index = 0
             attack_frame_counter = 0
+            attack_sound.play()
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a]:
@@ -141,6 +155,10 @@ while True:
         else:
             attack_frame = attack_frames[attack_frame_index]
         screen.blit(attack_frame, char_rect)
+        if char_rect.colliderect(boss_rect) and current_time - boss_hit_timer > boss_hit_delay:
+            boss_remaining_hp -= char_dmg
+            boss_hp_ratio = boss_remaining_hp/boss_max_hp
+            boss_hit_timer = current_time
     else:
         frame_counter += 1
         if frame_counter >= frame_update_rate:
@@ -306,6 +324,12 @@ while True:
         Hp_2_partial = Hp_2.subsurface((Hp_2_rect.width - health_width, 0, health_width, Hp_2_rect.height))
         screen.blit(Hp_2_partial, remaining_health_rect)
 
+    boss_health_width = int(boss_hp_2_rect.width * (1 - boss_hp_ratio))    
+    if boss_health_width > 0:
+        boss_remaining_health_rect = pygame.Rect(boss_hp_2_rect.right - boss_health_width, boss_hp_2_rect.top, boss_health_width, boss_hp_2_rect.height)
+        boss_Hp_2_partial = boss_hp_2.subsurface((boss_hp_2_rect.width - boss_health_width, 0, boss_health_width, boss_hp_2_rect.height))
+        screen.blit(boss_Hp_2_partial, boss_remaining_health_rect)
+
     # Font for displaying remaining HP
     font = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
     hp_text_black = font.render(f"{remaining_hp}/{max_hp}", True, (0, 0, 0))  # Màu đen
@@ -313,6 +337,14 @@ while True:
     hp_text_white = font.render(f"{remaining_hp}/{max_hp}", True, (255, 255, 255))  # Màu trắng
     screen.blit(hp_text_black, hp_text_rect.move(2, 2))  
     screen.blit(hp_text_white, hp_text_rect)
+
+    # Font for displaying remaining boss_HP
+    font2 = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
+    boss_hp_text_black = font.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (0, 0, 0))  # Màu đen
+    boss_hp_text_rect = boss_hp_text_black.get_rect(center=(width//2, 73))
+    boss_hp_text_white = font2.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (255, 255, 255))  # Màu trắng
+    screen.blit(boss_hp_text_black, boss_hp_text_rect.move(2, 2))  
+    screen.blit(boss_hp_text_white, boss_hp_text_rect)
 
     if remaining_hp <= 0:
         game_over = True
@@ -322,6 +354,13 @@ while True:
         text_die_white = font_die.render(f"GAME OVER!", True, (255, 255, 255))  # Màu trắng
         screen.blit(text_die_black, text_die_rect.move(10,10))
         screen.blit(text_die_white, text_die_rect)
+        while game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            # Hiển thị thông báo game over tại đây
+            pygame.display.flip()
 
     pygame.display.flip()
     clock.tick(60)
