@@ -1,5 +1,6 @@
 import pygame, sys
 from PIL import Image
+import math
 
 pygame.init()
 
@@ -44,7 +45,7 @@ poison_image_path = 'D:/SpiritKnight/Sprites/Poisoncloud.gif'
 poison_image = pygame.image.load(poison_image_path)
 
 # Poison Pool
-poison_pool_image_path = 'D:/SpiritKnight/Sprites/Poisonpool.png'
+poison_pool_image_path = 'D:\SpiritKnight\Sprites\Damaged.png'
 poison_pool_image = pygame.image.load(poison_pool_image_path)
 poison_pools = []
 
@@ -59,6 +60,8 @@ frame_update_rate = 5
 enemy_frame_index = 0
 enemy_frame_counter = 0
 flipped = False
+
+poison_velocity = pygame.math.Vector2(0, 0)
 
 while True:
     screen.fill((0,0,0))
@@ -96,10 +99,17 @@ while True:
     if current_time - poison_timer >= 4000:  # 4 seconds in milliseconds
         poison_thrown = True
         poison_rect = poison_image.get_rect(center=(enemy_rect.centerx, enemy_rect.centery))
+
+        # Calculate direction vector from enemy to character
+        direction = pygame.math.Vector2(char_rect.centerx - enemy_rect.centerx, char_rect.centery - enemy_rect.centery)
+        poison_velocity = direction.normalize() * 5  # Adjust speed as necessary
+
         poison_timer = current_time
 
     if poison_thrown:
-        poison_rect.x -= 5  # Move the poison bottle to the left
+        # Move the poison bottle in the direction of the character
+        poison_rect.x += poison_velocity.x
+        poison_rect.y += poison_velocity.y
 
         # Check collision with character
         if poison_rect.colliderect(char_rect):
