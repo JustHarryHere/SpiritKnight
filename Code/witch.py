@@ -123,7 +123,7 @@ while True:
         screen.blit(poison_image, poison_rect)
         # Kiểm tra va chạm với nhân vật chính
         if char_rect.colliderect(poison_rect):
-            print("Dính độc!")
+            print("poisoned")
 
     # Hiển thị nhân vật chính
     if flipped:
