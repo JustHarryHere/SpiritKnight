@@ -94,10 +94,10 @@ while True:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a]:
         char_rect.x -= 5
-        flipped = True
+        flipped = False
     if keys[pygame.K_d]:
         char_rect.x += 5
-        flipped = False
+        flipped = True
     if keys[pygame.K_w]:
         char_rect.y -= 5
     if keys[pygame.K_s]:
