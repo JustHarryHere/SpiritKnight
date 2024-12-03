@@ -37,6 +37,17 @@ for i in range(6):
 # Xoay frame tấn công
 flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in attack_frames]
 
+# Load sprite_sheet nhận sát thương
+attacked_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Ouch.png').convert_alpha()
+attacked_frames = []
+attacked_sprite_width, attacked_sprite_height = attacked_sprite_sheet.get_width() // 7, attacked_sprite_sheet.get_height()
+
+# Assuming 6 frames in the sprite sheet
+for i in range(7):
+    attacked_frame = attacked_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+    attacked_frames.append(attacked_frame)
+
+
 # Load boss GIF
 boss_gif_path = 'D:/SpiritKnight/Sprites/test_boss.gif'
 boss_gif = Image.open(boss_gif_path)
@@ -76,6 +87,10 @@ boss_remaining_hp = boss_max_hp
 boss_hp_ratio = boss_remaining_hp/boss_max_hp
 boss_hit_timer = 0
 boss_hit_delay = 500
+taking_damage = False
+damage_frame_counter = 0
+damage_frame_index = 0
+damage_frame_rate = 3
 
 
 #PNG
@@ -101,7 +116,7 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 knife_speed = 10
 knife_speed_2 = 9
 knife_timer = 0
-knife_interval = 5000 # 8 seconds in milliseconds
+knife_interval = 2000 # 8 seconds in milliseconds
 knives_left = []  # Knives moving to the left
 knives_right = []  # Knives moving to the right
 knives_up = []
@@ -113,6 +128,7 @@ knives_top_left = []
 
 #Sound 
 attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+getting_hit_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Ouch.wav')
 
 while True:
     current_time = pygame.time.get_ticks()
@@ -142,7 +158,23 @@ while True:
     if keys[pygame.K_s]:
         char_rect.y += 5
 
-    if attacking:
+    if taking_damage:
+        damage_frame_counter += 1
+        if damage_frame_counter >= damage_frame_rate:
+            damage_frame_counter = 0
+            damage_frame_index += 1
+            if damage_frame_index >= len(attacked_frames):
+                taking_damage = False  # Kết thúc hoạt ảnh nhận sát thương
+                damage_frame_index = 0
+
+    # Hiển thị khung hình hoạt ảnh nhận sát thương
+        if flipped:
+            damage_frame = pygame.transform.flip(attacked_frames[damage_frame_index], True, False)
+        else:
+            damage_frame = attacked_frames[damage_frame_index]
+        screen.blit(damage_frame, char_rect)
+
+    elif attacking:
         attack_frame_counter += 1
         if attack_frame_counter >= attack_frame_rate:
             attack_frame_counter = 0
@@ -221,6 +253,8 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0:
@@ -234,6 +268,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width:
@@ -247,6 +282,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y < 0:
@@ -260,6 +296,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-30, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y > height:
@@ -274,6 +311,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y > height:
@@ -287,6 +325,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y > height:
@@ -300,6 +339,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y < 0:
@@ -313,6 +353,7 @@ while True:
         pygame.draw.rect(screen, (0, 255, 0), knife_rect.inflate(-100, -100), 1)
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
+            taking_damage = True
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y < 0:
