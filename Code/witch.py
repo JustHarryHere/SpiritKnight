@@ -135,7 +135,7 @@ while True:
         throw_poison_bottle = True
         poison_bottle_start_time = pygame.time.get_ticks()
         poison_bottle_target = warning_circle_position
-        poison_bottle_rect.topleft = enemy_rect.topleft  # Start from the enemy's position
+        poison_bottle_rect.center = enemy_rect.center  # Start from the enemy's position
 
     if show_warning_circle:
         warning_circle_visible_timer += clock.get_time()
@@ -157,7 +157,7 @@ while True:
             progress = elapsed_time / 1500
             new_x = enemy_rect.x + (poison_bottle_target[0] - enemy_rect.x) * progress
             new_y = enemy_rect.y + (poison_bottle_target[1] - enemy_rect.y) * progress
-            poison_bottle_rect.topleft = (new_x, new_y)
+            poison_bottle_rect.center = (new_x, new_y)
             screen.blit(poison_bottle_image, poison_bottle_rect)
         else:
             throw_poison_bottle = False
@@ -172,7 +172,7 @@ while True:
         screen.blit(poison_frames[poison_frame_index], poison_rect)
         if poison_frame_index == len(poison_frames) - 1:
             show_poison_gif = False
-            poison_frame_index = 0 # Reset the frame index
+            poison_frame_index = 0  # Reset the frame index
 
     # Quản lý vùng độc
     if show_poison_aoe:
