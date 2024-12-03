@@ -82,12 +82,12 @@ boss_hit_delay = 500
 scale_factor = 0.5
 bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
 bg_rect = bg.get_rect(topleft = (0,0))
-boss_health = pygame.image.load('D:/SpiritKnight/Sprites/pixil-frame-0.png')
-boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*8), int(boss_health.get_height()*8)))
-boss_health_rect = boss_health.get_rect(center = (width//2,60))
-boss_hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/pixil-frame-0 (1).png')
-boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*8), int(boss_hp_2.get_height()*8)))
-boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,60))
+boss_health = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP1.png')
+boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*0.7), int(boss_health.get_height()*0.7)))
+boss_health_rect = boss_health.get_rect(center = (width//2,50))
+boss_hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP2.png')
+boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*0.7), int(boss_hp_2.get_height()*0.7)))
+boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,50))
 knife = pygame.image.load('D:/SpiritKnight/Sprites/knife.png')
 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
 Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP1.png')
@@ -341,7 +341,7 @@ while True:
     # Font for displaying remaining boss_HP
     font2 = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
     boss_hp_text_black = font.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (0, 0, 0))  # Màu đen
-    boss_hp_text_rect = boss_hp_text_black.get_rect(center=(width//2, 63))
+    boss_hp_text_rect = boss_hp_text_black.get_rect(center=(width//2, 73))
     boss_hp_text_white = font2.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (255, 255, 255))  # Màu trắng
     screen.blit(boss_hp_text_black, boss_hp_text_rect.move(2, 2))  
     screen.blit(boss_hp_text_white, boss_hp_text_rect)
