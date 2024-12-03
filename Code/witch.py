@@ -55,6 +55,15 @@ warning_circle_visible_timer = 0
 show_warning_circle = False
 warning_circle_position = None
 
+# Poison bottle variables
+poison_bottle_path = 'D:/SpiritKnight/Sprites/poison bottle.png'
+poison_bottle_image = pygame.image.load(poison_bottle_path).convert_alpha()
+poison_bottle_rect = poison_bottle_image.get_rect()
+poison_bottle_speed = 10
+throw_poison_bottle = False
+poison_bottle_start_time = 0
+poison_bottle_target = None
+
 # Poison cloud GIF variables
 poison_gif_path = 'D:/SpiritKnight/Sprites/Poisoncloud.gif'
 poison_gif = Image.open(poison_gif_path)
@@ -70,7 +79,7 @@ except EOFError:
 
 poison_frame_index = 0
 poison_frame_timer = 0
-poison_frame_duration = 150  # Duration for each frame
+poison_frame_duration = 300  # Duration for each frame
 show_poison_gif = False
 poison_gif_display_timer = 0
 poison_gif_delay = 1500  # 1.5 seconds delay before showing the poison GIF
@@ -123,6 +132,10 @@ while True:
         warning_circle_visible_timer = 0
         warning_circle_position = char_rect.center
         poison_gif_display_timer = 0  # Reset GIF display timer
+        throw_poison_bottle = True
+        poison_bottle_start_time = pygame.time.get_ticks()
+        poison_bottle_target = warning_circle_position
+        poison_bottle_rect.topleft = enemy_rect.topleft  # Start from the enemy's position
 
     if show_warning_circle:
         warning_circle_visible_timer += clock.get_time()
@@ -136,16 +149,30 @@ while True:
             poison_aoe_timer = 0
             poison_aoe_rect.center = warning_circle_position
 
+    # Ném bình độc
+    if throw_poison_bottle:
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - poison_bottle_start_time
+        if elapsed_time <= 1500:  # 1.5 seconds to reach the target
+            progress = elapsed_time / 1500
+            new_x = enemy_rect.x + (poison_bottle_target[0] - enemy_rect.x) * progress
+            new_y = enemy_rect.y + (poison_bottle_target[1] - enemy_rect.y) * progress
+            poison_bottle_rect.topleft = (new_x, new_y)
+            screen.blit(poison_bottle_image, poison_bottle_rect)
+        else:
+            throw_poison_bottle = False
+
     # Hiển thị GIF bình độc vỡ
     if show_poison_gif:
         poison_frame_timer += clock.get_time()
         if poison_frame_timer >= poison_frame_duration:
             poison_frame_timer = 0
             poison_frame_index = (poison_frame_index + 1) % len(poison_frames)
-        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0] + 4 warning_circle_position[1] + 4))  # Shift left by 10 pixels, down by 10 pixels
+        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0], warning_circle_position[1])) 
         screen.blit(poison_frames[poison_frame_index], poison_rect)
         if poison_frame_index == len(poison_frames) - 1:
             show_poison_gif = False
+            poison_frame_index = 0 # Reset the frame index
 
     # Quản lý vùng độc
     if show_poison_aoe:
