@@ -45,7 +45,12 @@ except EOFError:
 enemy_rect = enemy_frames[0].get_rect(center=(random.randint(0, width), random.randint(0, height)))
 enemy_frame_index = 0
 enemy_frame_counter = 0
-enemy_frame_update_rate = 10  # Adjust this rate as needed
+enemy_frame_update_rate = 10
+
+# Teleportation variables
+teleportation_distance_threshold = 150  # Distance at which the enemy will teleport
+teleportation_cooldown = 2000  # 2 seconds cooldown between teleports
+last_teleportation_time = 0
 
 # Warning circle variables
 warning_circle_timer = 0
@@ -119,10 +124,17 @@ while True:
         frame_index = (frame_index + 1) % len(char_frames)
 
     # Cập nhật khung hình kẻ địch
-    enemy_frame_counter += 1
+    enemy_frame_counter += clock.get_time()
     if enemy_frame_counter >= enemy_frame_update_rate:
         enemy_frame_counter = 0
         enemy_frame_index = (enemy_frame_index + 1) % len(enemy_frames)
+
+    # Teleportation logic
+    current_time = pygame.time.get_ticks()
+    distance_to_player = ((char_rect.centerx - enemy_rect.centerx) ** 2 + (char_rect.centery - enemy_rect.centery) ** 2) ** 0.5
+    if distance_to_player < teleportation_distance_threshold and current_time - last_teleportation_time >= teleportation_cooldown:
+        enemy_rect.center = (random.randint(0, width), random.randint(0, height))
+        last_teleportation_time = current_time
 
     # Quản lý cảnh báo hình tròn
     warning_circle_timer += clock.get_time()
