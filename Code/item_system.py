@@ -96,6 +96,21 @@ while True:
         char_rect.y -= 5
     if keys[pygame.K_s]:
         char_rect.y += 5
+        
+    # Dùng vật phẩm
+    # slot 1
+    if keys[pygame.K_q]:
+        item_count -= 1
+        if item_count == 0:
+            picked_up = False
+            cross_rect.center = (char_rect.centerx + 10000, char_rect.centery)
+    # slot 2
+    if keys[pygame.K_e]:
+        item2_count -= 1
+        if item2_count == 0:
+            picked_up = False
+            cross_rect.center = (char_rect.centerx + 10000, char_rect.centery)
+             
     
     # Nhặt vật phẩm
     if keys[pygame.K_f] and not picked_up:
