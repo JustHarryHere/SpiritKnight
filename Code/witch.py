@@ -116,10 +116,10 @@ except EOFError:
 
 poison_frame_index = 0
 poison_frame_timer = 0
-poison_frame_duration = 300  # Duration for each frame
+poison_frame_duration = 200  # Duration for each frame
 show_poison_gif = False
 poison_gif_display_timer = 0
-poison_gif_delay = 1500  # 1.5 seconds delay before showing the poison GIF
+poison_gif_delay = 2000  # 1.5 seconds delay before showing the poison GIF
 
 # Poison area variables
 poison_aoe_path = 'D:/SpiritKnight/Sprites/PoisonAoe.png'
