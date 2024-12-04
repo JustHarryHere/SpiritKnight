@@ -284,7 +284,7 @@ while True:
         screen.blit(char_frames[frame_index], char_rect)
 
     if show_poison_aoe and char_rect.colliderect(poison_aoe_rect):
-        print("Nhân vật đã dính độc!")
+        print("poisoned!")
 
     pygame.display.flip()
     clock.tick(60)
