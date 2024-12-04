@@ -1,6 +1,7 @@
 import pygame, sys
 from PIL import Image
 import random
+import math
 
 pygame.init()
 
@@ -8,6 +9,24 @@ width = 1280
 height = 720
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
+
+# Load teleportation circle image
+teleport_circle_path = 'D:/SpiritKnight/Sprites/defalt circle.png'
+teleport_circle_image = pygame.image.load(teleport_circle_path).convert_alpha()
+teleport_circle_rect = teleport_circle_image.get_rect()
+
+# Rotation variables
+teleport_circle_angle = 0 # Starting angle
+rotation_speed = 1 # Degrees to rotate each frame
+
+# Hàm tính khoảng cách
+def distance(rect1, rect2):
+    return ((rect1.centerx - rect2.centerx) ** 2 + (rect1.centery - rect2.centery) ** 2) ** 0.5
+
+# Enemy teleport variables
+teleporting = False
+teleport_start_time = 0
+teleport_duration = 700  # 1 second
 
 # Char
 character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
@@ -23,7 +42,7 @@ except EOFError:
     pass
 
 flipped_frames = [pygame.transform.flip(char_frame, True, False) for char_frame in char_frames]
-char_rect = char_frames[0].get_rect(center=(width//2, height//2))
+char_rect = char_frames[0].get_rect(center=(width // 2, height // 2))
 frame_index = 0
 frame_counter = 0
 frame_update_rate = 5
@@ -45,7 +64,25 @@ except EOFError:
 enemy_rect = enemy_frames[0].get_rect(center=(random.randint(0, width), random.randint(0, height)))
 enemy_frame_index = 0
 enemy_frame_counter = 0
-enemy_frame_update_rate = 10  # Adjust this rate as needed
+enemy_frame_update_rate = 60  # Tăng giá trị này để làm chậm tốc độ GIF
+teleport_distance = 200  # Khoảng cách tối thiểu để dịch chuyển
+
+# Load the teleportation charging GIF
+teleport_gif_path = 'D:/SpiritKnight/Sprites/black Wizard teleport v.gif'
+teleport_gif = Image.open(teleport_gif_path)
+teleport_frames = []
+try:
+    while True:
+        teleport_frame = teleport_gif.copy()
+        teleport_frame = teleport_frame.convert("RGBA")
+        teleport_frames.append(pygame.image.fromstring(teleport_frame.tobytes(), teleport_frame.size, teleport_frame.mode))
+        teleport_gif.seek(len(teleport_frames))  # Move to the next frame
+except EOFError:
+    pass
+
+teleport_frame_index = 0
+teleport_frame_timer = 0
+teleport_frame_duration = 100  # Adjust as needed for frame duration
 
 # Warning circle variables
 warning_circle_timer = 0
@@ -93,6 +130,23 @@ show_poison_aoe = False
 poison_aoe_timer = 0
 poison_aoe_duration = 8000  # Duration the poison area remains on screen
 
+# Teleport cooldown variables
+teleport_cooldown = 4000  # 2 seconds in milliseconds
+last_teleport_time = 0
+first_teleport = True  # Track if the first teleportation has occurred
+
+# Hàm tính toán góc quay để kẻ địch hướng về phía nhân vật
+def calculate_angle(character_rect, enemy_rect):
+    dx = character_rect.centerx - enemy_rect.centerx
+    dy = character_rect.centery - enemy_rect.centery
+    angle = math.atan2(dy, dx) * (180 / math.pi)
+    return angle
+
+# Hàm tính toán góc quay để kẻ địch hướng về phía nhân vật
+def calculate_direction(character_rect, enemy_rect):
+    dx = character_rect.centerx - enemy_rect.centerx
+    return dx < 0 # True nếu nhân vật ở bên phải kẻ địch, False nếu ở bên trái
+
 while True:
     screen.fill((0, 0, 0))
     for event in pygame.event.get():
@@ -112,30 +166,71 @@ while True:
     if keys[pygame.K_s]:
         char_rect.y += 5
 
-    # Cập nhật khung hình nhân vật
+    # Update character frame
     frame_counter += 1
     if frame_counter >= frame_update_rate:
         frame_counter = 0
         frame_index = (frame_index + 1) % len(char_frames)
 
-    # Cập nhật khung hình kẻ địch
-    enemy_frame_counter += 1
+    # Update enemy frame
+    enemy_frame_counter += clock.get_time()
     if enemy_frame_counter >= enemy_frame_update_rate:
         enemy_frame_counter = 0
         enemy_frame_index = (enemy_frame_index + 1) % len(enemy_frames)
 
-    # Quản lý cảnh báo hình tròn
+    # Kiểm tra và lật ảnh kẻ địch nếu cần
+    direction = calculate_direction(char_rect, enemy_rect)
+    if direction:
+        flipped_enemy_frame = enemy_frames[enemy_frame_index]
+        flipped_teleport_frame = teleport_frames[teleport_frame_index]
+    else:
+        flipped_enemy_frame = pygame.transform.flip(enemy_frames[enemy_frame_index], True, False)
+        flipped_teleport_frame = pygame.transform.flip(teleport_frames[teleport_frame_index], True, False)
+
+    # Teleportation check
+    current_time = pygame.time.get_ticks()
+    if teleporting:
+        if current_time - teleport_start_time >= teleport_duration:
+            while True:
+                new_x = random.randint(0, width - enemy_rect.width)
+                new_y = random.randint(0, height - enemy_rect.height)
+                if distance(char_rect, pygame.Rect(new_x, new_y, enemy_rect.width, enemy_rect.height)) > 650:
+                    enemy_rect.x = new_x
+                    enemy_rect.y = new_y
+                    break
+            teleporting = False
+            last_teleport_time = current_time
+            first_teleport = False
+        else:
+            teleport_frame_timer += clock.get_time()
+            if teleport_frame_timer >= teleport_frame_duration:
+                teleport_frame_timer = 0
+                teleport_frame_index = (teleport_frame_index + 1) % len(teleport_frames)
+
+            teleport_circle_angle = (teleport_circle_angle + rotation_speed) % 360
+            rotated_teleport_circle = pygame.transform.rotate(teleport_circle_image, teleport_circle_angle)
+            rotated_rect = rotated_teleport_circle.get_rect(center=enemy_rect.center)
+            screen.blit(rotated_teleport_circle, rotated_rect)
+
+            screen.blit(flipped_teleport_frame, enemy_rect)
+    else:
+        if (first_teleport or current_time - last_teleport_time >= teleport_cooldown) and distance(char_rect, enemy_rect) < teleport_distance:
+            teleporting = True
+            teleport_start_time = current_time
+            teleport_frame_index = 0
+
+    # Warning circle management
     warning_circle_timer += clock.get_time()
     if warning_circle_timer >= warning_circle_interval:
         warning_circle_timer = 0
         show_warning_circle = True
         warning_circle_visible_timer = 0
         warning_circle_position = char_rect.center
-        poison_gif_display_timer = 0  # Reset GIF display timer
+        poison_gif_display_timer = 0
         throw_poison_bottle = True
         poison_bottle_start_time = pygame.time.get_ticks()
         poison_bottle_target = warning_circle_position
-        poison_bottle_rect.center = enemy_rect.center  # Start from the enemy's position
+        poison_bottle_rect.center = enemy_rect.center
 
     if show_warning_circle:
         warning_circle_visible_timer += clock.get_time()
@@ -149,11 +244,10 @@ while True:
             poison_aoe_timer = 0
             poison_aoe_rect.center = warning_circle_position
 
-    # Ném bình độc
     if throw_poison_bottle:
         current_time = pygame.time.get_ticks()
         elapsed_time = current_time - poison_bottle_start_time
-        if elapsed_time <= 1500:  # 1.5 seconds to reach the target
+        if elapsed_time <= 1500:
             progress = elapsed_time / 1500
             new_x = enemy_rect.x + (poison_bottle_target[0] - enemy_rect.x) * progress
             new_y = enemy_rect.y + (poison_bottle_target[1] - enemy_rect.y) * progress
@@ -162,35 +256,33 @@ while True:
         else:
             throw_poison_bottle = False
 
-    # Hiển thị GIF bình độc vỡ
     if show_poison_gif:
         poison_frame_timer += clock.get_time()
         if poison_frame_timer >= poison_frame_duration:
             poison_frame_timer = 0
             poison_frame_index = (poison_frame_index + 1) % len(poison_frames)
-        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0], warning_circle_position[1])) 
+        poison_rect = poison_frames[poison_frame_index].get_rect(center=(warning_circle_position[0], warning_circle_position[1]))
         screen.blit(poison_frames[poison_frame_index], poison_rect)
         if poison_frame_index == len(poison_frames) - 1:
             show_poison_gif = False
-            poison_frame_index = 0  # Reset the frame index
+            poison_frame_index = 0
 
-    # Quản lý vùng độc
     if show_poison_aoe:
         poison_aoe_timer += clock.get_time()
         screen.blit(poison_aoe_image, poison_aoe_rect)
         if poison_aoe_timer >= poison_aoe_duration:
             show_poison_aoe = False
 
-    # Hiển thị kẻ địch
-    screen.blit(enemy_frames[enemy_frame_index], enemy_rect)
+    if not teleporting:
+        screen.blit(flipped_enemy_frame, enemy_rect)
+    else:
+        screen.blit(flipped_teleport_frame, enemy_rect)
 
-    # Hiển thị nhân vật
     if flipped:
         screen.blit(flipped_frames[frame_index], char_rect)
     else:
         screen.blit(char_frames[frame_index], char_rect)
 
-    # Kiểm tra nếu nhân vật dính độc
     if show_poison_aoe and char_rect.colliderect(poison_aoe_rect):
         print("Nhân vật đã dính độc!")
 
