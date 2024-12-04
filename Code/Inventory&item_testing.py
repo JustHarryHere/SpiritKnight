@@ -10,7 +10,7 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
 max_hp = 100
-remaining_hp = max_hp
+remaining_hp = 50
 hp_ratio = remaining_hp/max_hp
 
 # Dùng cho stack item
@@ -49,6 +49,7 @@ except EOFError:
     pass
 
 
+
 char_rect = char_frames[0].get_rect(center=(width//2, height//2))
 cross_rect = cross_frames[0].get_rect(center = (width//2 + 100, height// 2))
 frame_index = 0
@@ -70,8 +71,9 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 Inv = pygame.image.load('D:/SpiritKnight/Sprites/inv.png').convert_alpha()
 Inv = pygame.transform.scale(Inv, (int(Inv.get_width()*scale_factor), int(Inv.get_height()*scale_factor)))
 Inv_rect = Inv.get_rect(topleft = (0,0))
-item_1 = pygame.image.load('D:/SpiritKnight/Sprites/Trans.png').convert_alpha()
-item_1_rect = item_1.get_rect(center = (75,78))
+potion = pygame.image.load('D:/SpiritKnight/Sprites/Trans.png').convert_alpha()
+potion = pygame.transform.scale(potion, (int(Inv.get_width()*0.15), int(Inv.get_height()*0.15)))
+potion_rect = potion.get_rect(center = (75,78))
 bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
 #bg = pygame.transform.scale(bg, (int(bg.get_width()*scale_factor), int(bg.get_height()*scale_factor)))
 bg_rect = bg.get_rect(topleft = (0,0))
@@ -83,7 +85,7 @@ while True:
     screen.blit(Hp_bar, Hp_bar_rect)
     screen.blit(Inv, Inv_rect)
     if picked_up:
-        screen.blit(item_1, item_1_rect)
+        screen.blit(potion, potion_rect)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -108,7 +110,6 @@ while True:
     # slot 1
     if keys[pygame.K_q]:
         item1_count -= 1
-        # sử dụng potion(potion hoạt động rồi)(tôi chưa biết nên chỉnh sao để cho potion dù ở slot nào cũng dùng được nên tạm để đây)
         if item1_count >= 0 and remaining_hp <= 80:
             remaining_hp += 20
         elif remaining_hp > 80 and remaining_hp < 100:
@@ -120,7 +121,7 @@ while True:
             picked_up = False
             cross_rect.center = (char_rect.centerx + 10000, char_rect.centery)
         else:
-            item_1_rect.center = (75, 78)
+            potion_rect.center = (75, 78)
 
         
     # slot 2
@@ -140,11 +141,11 @@ while True:
             # Đặt vị trí vật phẩm trong túi đồ
             # Slot 1
             if item1_count <= 2:
-               item_1_rect.center = (75, 78)
+               potion_rect.center = (75, 78)
             # Slot 2
             if item1_count > 2:
                 item2_count += 1
-                item_1_rect.center = (115, 78)
+                potion_rect.center = (115, 78)
 
     # Quăng vật phẩm
     if keys[pygame.K_g] and picked_up:
