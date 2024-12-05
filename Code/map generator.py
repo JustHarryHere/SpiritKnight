@@ -46,10 +46,15 @@ spawn_area_y_min, spawn_area_y_max = height // 4, 3 * height // 4
 num_obstacles = 5
 obstacles = []
 for _ in range(num_obstacles):
-    x = random.randint(spawn_area_x_min, spawn_area_x_max)
-    y = random.randint(spawn_area_y_min, spawn_area_y_max)
-    obstacle_rect = obstacle_image.get_rect(center=(x, y))
-    obstacles.append({"sprite": obstacle_image, "rect": obstacle_rect})
+    while True:
+        x = random.randint(spawn_area_x_min, spawn_area_x_max)
+        y = random.randint(spawn_area_y_min, spawn_area_y_max)
+        obstacle_rect = obstacle_image.get_rect(center=(x, y))
+        
+        # Kiểm tra xem obstacle mới có giao với các obstacle đã tạo không
+        if all(not obstacle_rect.colliderect(existing["rect"]) for existing in obstacles):
+            obstacles.append({"sprite": obstacle_image, "rect": obstacle_rect})
+            break
 
 # Danh sách game_objects
 game_objects = obstacles + [
