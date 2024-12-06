@@ -9,7 +9,7 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
 # Char
-character_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/SpiritKnight/Sprites/lil dude bigger.gif'
+character_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude bigger.gif'
 character_gif = Image.open(character_gif_path)
 char_frames = []
 try:
@@ -23,7 +23,7 @@ except EOFError:
 flipped_frames = [pygame.transform.flip(char_frame, True, False) for char_frame in char_frames]
 
 # Goblin idle
-goblin_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/SpiritKnight/Sprites/Goblin.gif'
+goblin_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Goblin.gif'
 goblin_gif = Image.open(goblin_gif_path)
 goblin_idle_frames = []
 try:
@@ -36,7 +36,7 @@ except EOFError:
     pass
 
 # Goblin attack
-goblin_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/SpiritKnight/Sprites/GoblinAtk.gif'
+goblin_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/GoblinAtk.gif'
 goblin_attack_gif = Image.open(goblin_attack_gif_path)
 goblin_attack_frames = []
 try:
@@ -61,6 +61,10 @@ frame_counter = 0
 frame_update_rate = 5
 flipped = False
 
+# Frame update rates
+idle_update_rate = 5
+attack_update_rate = 8  # Faster for smoother attack
+
 while True:
     screen.fill((0, 0, 0))
     for event in pygame.event.get():
@@ -81,22 +85,41 @@ while True:
     if keys[pygame.K_s]:
         char_rect.y += 5
 
-    # Check collision and update goblin state
-    if char_rect.colliderect(goblin_rect) and goblin_state != "attack":
-        goblin_state = "attack"
-        goblin_frame_index = 0  # Reset attack animation frame
+    # Char hitbox
+    char_hitbox = pygame.Rect(
+        char_rect.x + 5,  # Offset
+        char_rect.y + 40,  # Offset
+        char_rect.width - 10,  # Width
+        char_rect.height - 38  # Height
+    )
+    
+    # Goblin hitbox
+    goblin_hitbox = pygame.Rect(
+        goblin_rect.x + 15,
+        goblin_rect.y + 10,
+        goblin_rect.width - 30,
+        goblin_rect.height - 20
+    )
 
-    # Update goblin animation
+    # Check collision and update goblin state
+    if goblin_hitbox.colliderect(char_hitbox) and goblin_state != "attack":
+        goblin_state = "attack"
+        goblin_frame_index = 0
+
     goblin_frame_counter += 1
-    if goblin_frame_counter >= frame_update_rate:
+    current_update_rate = attack_update_rate if goblin_state == "attack" else idle_update_rate
+    if goblin_frame_counter >= current_update_rate:
         goblin_frame_counter = 0
         if goblin_state == "idle":
             goblin_frame_index = (goblin_frame_index + 1) % len(goblin_idle_frames)
         elif goblin_state == "attack":
             goblin_frame_index += 1
             if goblin_frame_index >= len(goblin_attack_frames):
-                goblin_state = "idle"  # Return to idle after attack finishes
-                goblin_frame_index = 0
+                goblin_frame_index = len(goblin_attack_frames) - 1  # Stay on last frame
+                # Add a delay or some other condition here to transition back to idle
+                goblin_state = "idle"  # Change state after the attack finishes
+                goblin_frame_index = 0  # Reset index for the idle animation
+
 
     # Display goblin
     if goblin_state == "idle":
@@ -115,6 +138,10 @@ while True:
         screen.blit(flipped_frames[frame_index], char_rect)
     else:
         screen.blit(char_frames[frame_index], char_rect)
+
+    # Draw hitboxes for debugging
+    pygame.draw.rect(screen, (0, 255, 0), char_hitbox, 2)
+    pygame.draw.rect(screen, (255, 0, 0), goblin_hitbox, 2)
 
     pygame.display.flip()
     clock.tick(60)
