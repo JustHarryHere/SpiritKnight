@@ -1,0 +1,945 @@
+import pygame, sys
+from PIL import Image
+import time
+import random
+from pygame.math import Vector2
+from spawner import Spawner
+import math
+import csv
+
+
+pygame.mixer.init()
+
+run_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/running-6358.wav')
+
+# Load and play background music
+pygame.mixer.music.load('D:/SpiritKnight/Music/Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3')
+pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+
+
+# Function to load GIF frames
+def gif_image(gif, frames):
+    try:
+        while True:
+            frame = gif.copy()
+            frame = frame.convert("RGBA")
+            frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+            gif.seek(len(frames))  # Move to the next frame
+    except EOFError:
+        pass
+
+# Function to load frames from a sprite sheet
+def load_frames_from_sprite_sheet(sprite_sheet_path, frame_count):
+    sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+    frames = []
+    sprite_width, sprite_height = sprite_sheet.get_width() // frame_count, sprite_sheet.get_height()
+
+    for i in range(frame_count):
+        frame = sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+        frames.append(frame)
+    
+    return frames
+
+
+# Function to handle events
+def handle_events(attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left click
+                attacking = True
+                attack_frame_index = 0
+                attack_frame_counter = 0
+            elif event.button == 3 and not charge_cooldown:  # Right click
+                charging = True
+                charge_frame_index = 0
+                charge_frame_counter = 0
+                charge_cooldown = True
+                last_charge_time = time.time()
+                skill_active = True
+                cooldown_start_time = pygame.time.get_ticks()
+    return attacking, attack_frame_index, attack_frame_counter, charging, charge_frame_index, charge_frame_counter, charge_cooldown, last_charge_time, skill_active, cooldown_start_time
+
+# Function to handle key inputs and return the direction the player is facing
+def handle_keys(character_rect, width, height, flipped):
+    keys = pygame.key.get_pressed()
+    running = False
+
+    # Movement controls
+    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+        character_rect.x -= 5
+        if character_rect.x < 0:
+            character_rect.x = 0
+        running = True
+        flipped = False  # Facing left
+    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+        character_rect.x += 5
+        if character_rect.right > width:
+            character_rect.right = width
+        running = True
+        flipped = True  # Facing right
+    if keys[pygame.K_w] or keys[pygame.K_UP]:
+        character_rect.y -= 5
+        if character_rect.y < 0:
+            character_rect.y = 0
+        running = True
+    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+        character_rect.y += 5
+        if character_rect.bottom > height:
+            character_rect.bottom = height
+        running = True
+
+    return running, flipped
+
+# class deepfake():
+#     def __init__(self,screen, game_objs, char_rect, flipped_frames, frame_index, flipped, frames):
+#         self.game_objs = game_objs
+#         self.char_rect = char_rect
+#         self.screen = screen
+#         self.flipped_frames = flipped_frames
+#         self.frame_index = frame_index
+#         self.flipped = flipped
+#         self.frames = frames
+
+#     def sorted_by_y(self):
+#         self.game_objs.sort(key=lambda obj: obj["rect"].centery)
+#         for obj in self.game_objs:
+#             if obj["rect"] == self.char_rect:  # Đối tượng là nhân vật
+#                 obj["sprite"] = self.flipped_frames[self.frame_index] if self.flipped else self.frames[self.frame_index]
+
+#     # Vẽ các đối tượng theo thứ tự đã sắp xếp
+#         for obj in self.game_objs:
+#             self.screen.blit(obj["sprite"], obj["rect"])
+#         pass
+
+class Character:
+    def __init__(self, width, height,enemy_manager):
+        self.width = width
+        self.height = height
+        self.enemy_manager = enemy_manager
+        self.load_assets()
+        self.slash()
+        self.reset_states()
+
+
+    def slash(self):
+        self.slash_right = pygame.image.load('D:/SpiritKnight/Sprites/wind burst.png') 
+        self.slash_left = pygame.image.load('D:/SpiritKnight/Sprites/wind burst2.png')
+        self.slash_rect = pygame.Rect(0, 0, self.slash_right.get_width(), self.slash_right.get_height())
+        self.slash_speed = 10
+        self.slash_active = False
+        self.slash_direction = 1  # 1 for right, -1 for left
+        self.slash_animation = False
+        self.slash_start_x = 0
+        self.max_slash_distance = 300  # Maximum distance the slash can travel
+        self.slash_hitted = False
+
+
+    def load_assets(self):
+        self.load_gif()
+        self.load_attack_frames()
+        self.load_charge_attack_frames()
+        self.load_run_frames()
+        self.load_dash_frames()
+
+    def load_gif(self):
+        gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+        gif = Image.open(gif_path)
+        self.frames = []
+        try:
+            while True:
+                frame = gif.copy()
+                frame = frame.convert("RGBA")
+                self.frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+                gif.seek(len(self.frames))  # Move to the next frame
+        except EOFError:
+            pass
+
+        self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
+
+    def load_attack_frames(self):
+        attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
+        self.attack_frames = []
+        sprite_width, sprite_height = attack_sprite_sheet.get_width() // 6, attack_sprite_sheet.get_height()
+
+        for i in range(6):
+            frame = attack_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+            self.attack_frames.append(frame)
+
+        self.flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in self.attack_frames]
+
+    def load_charge_attack_frames(self):
+        charge_attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Battery.png').convert_alpha()
+        self.charge_attack_frames = []
+        charge_sprite_width, charge_sprite_height = charge_attack_sprite_sheet.get_width() // 9, charge_attack_sprite_sheet.get_height()
+
+        for i in range(9):
+            charge_frame = charge_attack_sprite_sheet.subsurface((i * charge_sprite_width, 0, charge_sprite_width, charge_sprite_height))
+            self.charge_attack_frames.append(charge_frame)
+
+        self.flipped_charge_attack_frames = [pygame.transform.flip(charge_frame, True, False) for charge_frame in self.charge_attack_frames]
+
+    def load_run_frames(self):
+        run_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/running.png').convert_alpha()
+        self.run_frames = []
+        run_width, run_height = run_sprite_sheet.get_width() // 8, run_sprite_sheet.get_height()
+
+        for i in range(8):
+            run_frame = run_sprite_sheet.subsurface((i * run_width, 0, run_width, run_height))
+            self.run_frames.append(run_frame)
+
+        self.flipped_run_frames = [pygame.transform.flip(run_frame, True, False) for run_frame in self.run_frames]
+
+    def load_dash_frames(self):
+        dash_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Dash.png').convert_alpha()
+        self.dash_frames = []
+        dash_width, dash_height = dash_sprite_sheet.get_width() // 8, dash_sprite_sheet.get_height()
+
+        for i in range(8):
+            dash_frame = dash_sprite_sheet.subsurface((i * dash_width, 0, dash_width, dash_height))
+            self.dash_frames.append(dash_frame)
+
+        self.flipped_dash_frames = [pygame.transform.flip(dash_frame, True, False) for dash_frame in self.dash_frames]
+
+    def reset_states(self):
+        self.character_rect = self.frames[0].get_rect(center=(self.width // 2, self.height // 2))
+        print(self.character_rect)
+        self.hitbox = self.character_rect.copy()
+        self.hitbox.inflate_ip(-40, -40)
+        self.frame_index = 0
+        self.run_frame_index = 0
+        self.attack_frame_index = 0
+        self.charge_frame_index = 0
+        self.dash_frame_index = 0
+        self.flipped = False
+        self.attacking = False
+        self.charging = False
+        self.running = False
+        self.dashing = False
+        self.charge_cooldown = False
+        self.dash_cooldown = False
+        self.charge_cooldown_time = 2  # Charge cooldown time (seconds)
+        self.dash_cooldown_time = 1.5  # Dash cooldown time (seconds)
+        self.last_charge_time = 0
+        self.last_dash_time = 0
+        self.frame_counter = 0
+        self.run_frame_counter = 0
+        self.attack_frame_counter = 0
+        self.charge_frame_counter = 0
+        self.dash_frame_counter = 0
+        self.frame_update_rate = 5
+        self.attack_frame_update_rate = 2
+        self.charge_frame_update_rate = 4
+        self.dash_frame_update_rate = 2
+        self.dash_duration = len(self.dash_frames)
+        self.dash_speed = 10
+        self.collision = False
+
+    def handle_keys(self):
+        keys = pygame.key.get_pressed()
+        self.running = False
+
+        # Define movement boundaries (e.g., within the screen dimensions)
+        min_x, max_x = 0, self.width - 15 - self.character_rect.width
+        top_border, bottom_border = 70, self.height - 32 - self.character_rect.height
+        
+        if keys[pygame.K_a]:
+            self.character_rect.x = max(min_x, self.character_rect.x - 5)
+            self.running = True
+            self.flipped = False
+        if keys[pygame.K_d]:
+            self.character_rect.x = min(max_x, self.character_rect.x + 5)
+            self.running = True
+            self.flipped = True
+        if keys[pygame.K_w]:
+            self.character_rect.y = max(top_border, self.character_rect.y - 5)
+            self.running = True
+        if keys[pygame.K_s]:
+            self.character_rect.y = min(bottom_border, self.character_rect.y + 5)
+            self.running = True
+
+        if self.dashing:
+            if self.flipped:
+                self.character_rect.x = min(max_x, self.character_rect.x + self.dash_speed)
+            else:
+                self.character_rect.x = max(min_x, self.character_rect.x - self.dash_speed)
+
+            # Ensure the character stays within the vertical boundaries while dashing
+            if self.character_rect.y < top_border:
+                self.character_rect.y = top_border
+            elif self.character_rect.y > bottom_border:
+                self.character_rect.y = bottom_border
+
+            # Update dash frame index and counter
+            self.dash_frame_counter += 1
+            if self.dash_frame_counter >= self.dash_frame_update_rate:
+                self.dash_frame_counter = 0
+                self.dash_frame_index = (self.dash_frame_index + 1) % len(self.dash_frames)
+
+            # Stop dashing when the dash animation is complete
+            if self.dash_frame_index == len(self.dash_frames) - 1:
+                self.dashing = False
+
+        self.hitbox.center = self.character_rect.center
+
+    def draw(self, screen):
+        if self.dashing:
+            if self.flipped:
+                screen.blit(self.flipped_dash_frames[self.dash_frame_index], self.character_rect)
+            else:
+                screen.blit(self.dash_frames[self.dash_frame_index], self.character_rect)
+            self.dash_frame_counter += 1
+            if self.dash_frame_counter >= self.dash_frame_update_rate:
+                self.dash_frame_counter = 0
+                self.dash_frame_index = (self.dash_frame_index + 1) % len(self.dash_frames)
+            if self.flipped:
+                self.character_rect.x += self.dash_speed
+            else:
+                self.character_rect.x -= self.dash_speed
+            if self.dash_frame_index == len(self.dash_frames) - 1:
+                self.dashing = False
+
+        elif self.charging:
+            if self.flipped:
+                screen.blit(self.flipped_charge_attack_frames[self.charge_frame_index], self.character_rect)
+            else:
+                screen.blit(self.charge_attack_frames[self.charge_frame_index], self.character_rect)
+            self.charge_frame_counter += 1
+            if self.charge_frame_counter >= self.charge_frame_update_rate:
+                self.charge_frame_counter = 0
+                self.charge_frame_index += 1
+            if self.charge_frame_index >= len(self.charge_attack_frames):
+                self.charging = False
+                self.charge_frame_index = 0
+                self.slash_animation = True
+                self.slash_active = True
+                self.slash_rect.center = self.character_rect.center
+                self.slash_start_x = self.slash_rect.x
+                self.slash_direction = 1 if self.flipped else -1
+
+        elif self.slash_animation:
+            if self.flipped:
+                screen.blit(self.flipped_frames[self.frame_index], self.character_rect)
+            else:
+                screen.blit(self.frames[self.frame_index], self.character_rect)
+            if self.slash_active:
+                slash_image = self.slash_right if self.slash_direction == 1 else self.slash_left
+                self.slash_rect.x += self.slash_speed * self.slash_direction
+                screen.blit(slash_image, self.slash_rect)
+                if abs(self.slash_rect.x - self.slash_start_x) > self.max_slash_distance or self.slash_rect.x < 0 or self.slash_rect.x > self.width:
+                    self.slash_active = False
+                    self.slash_animation = False
+                    self.slash_rect.topleft = (-1000, -1000)
+
+                # Check for collision with enemies
+                for enemy in self.enemy_manager.enemies:
+                    if self.slash_rect.colliderect(enemy.rect):
+                        print('Enemy hit!')
+                        self.slash_hitted = True  # Update the slash_hitted variable
+                        enemy.update_hit_count()  # Update the hit_count
+
+            # Reset slash_hitted after checking all enemies
+            self.slash_hitted = False
+
+        elif self.attacking:
+            if self.flipped:
+                screen.blit(self.flipped_attack_frames[self.attack_frame_index], self.character_rect)
+            else:
+                screen.blit(self.attack_frames[self.attack_frame_index], self.character_rect)
+            self.attack_frame_counter += 1
+            if self.attack_frame_counter >= self.attack_frame_update_rate:
+                self.attack_frame_counter = 0
+                self.attack_frame_index += 1
+            if self.attack_frame_index >= len(self.attack_frames):
+                self.attacking = False
+
+        elif self.running:
+            if self.flipped:
+                screen.blit(self.flipped_run_frames[self.run_frame_index], self.character_rect)
+            else:
+                screen.blit(self.run_frames[self.run_frame_index], self.character_rect)
+            self.run_frame_counter += 1
+            if self.run_frame_counter >= self.frame_update_rate:
+                self.run_frame_counter = 0
+                self.run_frame_index = (self.run_frame_index + 1) % len(self.run_frames)
+
+        else:
+            self.frame_counter += 1
+            if self.frame_counter >= self.frame_update_rate:
+                self.frame_counter = 0
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
+            if self.flipped:
+                screen.blit(self.flipped_frames[self.frame_index], self.character_rect)
+            else:
+                screen.blit(self.frames[self.frame_index], self.character_rect)
+
+        pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)  # Hitbox (red)
+
+
+# class Goblin:
+#     def __init__(self, frames_gob, initial_pos, width, height):
+#         self.frames_gob = frames_gob
+#         self.width = width
+#         self.height = height
+#         self.gob_rect = self.frames_gob[0].get_rect(center=initial_pos)
+#         self.frame_gob_index = 0
+#         self.gob_frame_counter = 0
+#         self.goblin_hit_count = 0
+#         self.flipped_frames_goblin = [pygame.transform.flip(frame, True, False) for frame in self.frames_gob]
+#         self.hit_recently = False  # Flag to track if goblin was hit recently
+#         self.last_hit_time = 0  # Time when the last hit was registered
+#         self.hit_delay = 0.5  # Delay in seconds before registering the hit
+#         self.skill_hit_recently = False  # Flag to track if the goblin was hit by a skill
+#         self.last_skill_hit_time = 0  # Time when the last skill hit was registered
+#         self.skill_hit_delay = 10  # Delay in seconds for the skill hit
+
+#     def update(self, character_pos, attacking, charging):
+#         player_pos = Vector2(character_pos)
+#         enemy_pos = Vector2(self.gob_rect.center)
+#         distance_to_player = player_pos.distance_to(enemy_pos)
+#         direction = player_pos - enemy_pos
+
+#         current_time = time.time()
+
+#         if distance_to_player < 100:
+#             direction = direction.normalize() if direction.length() != 0 else Vector2(0, 0)
+
+#             if attacking and not self.hit_recently:
+#                 if current_time - self.last_hit_time >= self.hit_delay:
+#                     self.goblin_hit_count += 1
+#                     print(self.goblin_hit_count)
+#                     self.hit_recently = True  # Set the flag to true when hit
+#                     self.last_hit_time = current_time  # Update the last hit time
+#             if charging and not self.skill_hit_recently:
+#                 if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
+#                     self.goblin_hit_count += 1
+#                     print(self.goblin_hit_count)
+#                     self.skill_hit_recently = True  # Set the flag to true when skill hit
+#                     self.last_skill_hit_time = current_time  # Update the last skill hit time
+#         else:
+#             self.hit_recently = False  # Reset the flag when not close to the player
+#             self.skill_hit_recently = False  # Reset the skill hit flag when not close to the player
+#             if direction.length() >= 50:
+#                 direction = direction.normalize()
+#             enemy_pos += direction * 2
+#             self.gob_rect.center = enemy_pos
+
+#         if direction.x < 0:
+#             self.direction = "right"
+#         else:
+#             self.direction = "left"
+
+#         return self.direction
+
+#     def draw(self, screen):
+#         if self.goblin_hit_count < 3:
+#             self.gob_frame_counter += 1
+#             if self.gob_frame_counter >= 5:
+#                 self.gob_frame_counter = 0
+#                 self.frame_gob_index = (self.frame_gob_index + 1) % len(self.frames_gob)
+#             if self.direction == "right":
+#                 screen.blit(self.frames_gob[self.frame_gob_index], self.gob_rect)
+#             else:
+#                 screen.blit(self.flipped_frames_goblin[self.frame_gob_index], self.gob_rect)
+#             pygame.draw.rect(screen, (0, 255, 0), self.gob_rect, 2)  # Hitbox (green)
+
+# class GoblinManager:
+#     def __init__(self, frames_gob, width, height, min_distance, num_enemies):
+#         self.frames_gob = frames_gob
+#         self.width = width
+#         self.height = height
+#         self.min_distance = min_distance
+#         self.num_enemies = num_enemies
+#         self.goblins = []
+#         self.spawn_multiple_enemies(Vector2(width // 4, height // 4))
+
+#     # def spawn_enemy(self, character_pos):
+#     #     while True:
+#     #         enemy_x = random.randint(0, self.width)
+#     #         enemy_y = random.randint(0, self.height)
+#     #         enemy_pos = Vector2(enemy_x, enemy_y)
+#     #         if enemy_pos.distance_to(character_pos) >= self.min_distance:
+#     #             return enemy_pos
+
+#     def spawn_multiple_enemies(self, character_pos):
+#         for _ in range(self.num_enemies):
+#             enemy_pos = self.spawn_enemy(character_pos)
+#             goblin = Goblin(self.frames_gob, enemy_pos, self.width, self.height)
+#             self.goblins.append(goblin)
+
+#     def update(self, character_pos, attacking, charging):
+#         for goblin in self.goblins:
+#             goblin.update(character_pos, attacking, charging)
+
+#     def draw(self, screen):
+#         for goblin in self.goblins:
+#             goblin.draw(screen)
+
+
+class Cross: 
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.load_assets()
+        self.frame_index = 0
+        self.frame_counter = 0
+        self.frame_update_rate = 5
+        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
+        self.picked_up = False
+        self.item_1 = pygame.image.load('D:/SpiritKnight/Sprites/mary1.png').convert_alpha()
+        self.item_1_rect = self.item_1.get_rect(center=(75, 78))
+        self.cross_frame_index = 0
+
+    def load_assets(self):
+        self.load_gif()
+
+    def load_gif(self):
+        gif_path = 'D:/SpiritKnight/Sprites/Mary on a.gif'
+        gif = Image.open(gif_path)
+        character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+        character_gif = Image.open(character_gif_path)
+        
+        self.char_frames = []
+        try:
+            while True:
+                char_frame = character_gif.copy()
+                char_frame = char_frame.convert("RGBA")
+                self.char_frames.append(pygame.image.fromstring(char_frame.tobytes(), char_frame.size, char_frame.mode))
+                character_gif.seek(len(self.char_frames))  # Move to the next frame
+        except EOFError:
+            pass
+
+        self.flipped_char_frames = [pygame.transform.flip(char_frame, True, False) for char_frame in self.char_frames]
+
+        self.frames = []
+        try:
+            while True:
+                frame = gif.copy()
+                frame = frame.convert("RGBA")
+                frame = frame.resize((60, 60), Image.Resampling.LANCZOS)
+                self.frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+                gif.seek(len(self.frames))  # Move to the next frame
+        except EOFError:
+            pass
+
+        self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
+        self.cross_rect = self.frames[0].get_rect(center=(self.width//2 + 100, self.height//2))
+        # self.char_rect = self.char_frames[0].get_rect(center=(self.width//2, self.height//2)) # load main
+
+    def check_pick_up(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_f] and not self.picked_up:
+            if self.char_rect.colliderect(self.cross_rect):
+                print(self.char_rect)
+                self.picked_up = True
+                self.pick_up_sound.play()
+
+    def draw(self, screen, slot_inventory):
+        self.check_pick_up()
+        if self.picked_up and not slot_inventory["slot1"]["status"] :
+            slot_inventory["slot1"]["status"] = True
+        elif self.picked_up and slot_inventory["slot2"]["status"]:
+            slot_inventory["slot2"]["status"] = True
+
+        if not self.picked_up:
+            screen.blit(self.frames[self.cross_frame_index], self.cross_rect)
+        
+        if(slot_inventory["slot1"]["status"]):
+            screen.blit(self.item_1, slot_inventory["slot1"]["slot_1_pos"])
+        elif(slot_inventory["slot2"]["status"]):
+            screen.blit(self.item_1, slot_inventory["slot2"]["slot_2_pos"]) 
+
+        self.frame_counter += 1
+        if self.frame_counter >= self.frame_update_rate:
+            self.frame_counter = 0
+            self.frame_index = (self.frame_index + 1) % len(self.char_frames)
+            self.cross_frame_index = (self.cross_frame_index + 1) % len(self.frames)
+
+class Enemy:
+    def __init__(self, frames, initial_pos, width, height, character):
+        self.frames = frames
+        self.width = width
+        self.height = height
+        self.rect = self.frames[0].get_rect(center=initial_pos)
+        self.frame_index = 0
+        self.frame_counter = 0
+        self.hit_count = 0
+        self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
+        self.hit_recently = False
+        self.last_hit_time = 0
+        self.hit_delay = 0.5
+        self.skill_hit_recently = False
+        self.last_skill_hit_time = 0
+        self.skill_hit_delay = 10
+        self.eliminated = False
+        self.direction = "left"
+        self.character = character
+
+    def update_hit_count(self): 
+        self.hit_count += 1 
+        print(f'Hit count updated to: {self.hit_count}')
+
+    def update(self, character_pos, attacking, charging, character):
+        if self.hit_count >= 3:
+            self.eliminated = True
+            return
+
+        player_pos = Vector2(character_pos)
+        enemy_pos = Vector2(self.rect.center)
+        distance_to_player = player_pos.distance_to(enemy_pos)
+        direction = player_pos - enemy_pos
+
+        current_time = time.time()
+
+        if distance_to_player < 100:
+            direction = direction.normalize() if direction.length() != 0 else Vector2(0, 0)
+
+            if attacking and not self.hit_recently:
+                if current_time - self.last_hit_time >= self.hit_delay:
+                    self.hit_count += 1
+                    print(self.hit_count)
+                    self.hit_recently = True
+                    self.last_hit_time = current_time
+
+            # Check for slashes and count them as hits
+            if(character.slash_hitted):
+                print(character.slash_hitted)
+            if (charging or character.slash_hitted) and not self.skill_hit_recently:
+                if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
+                    self.hit_count += 1
+                    print(self.hit_count)
+                    self.skill_hit_recently = True
+                    self.last_skill_hit_time = current_time
+        else:
+            self.hit_recently = False
+            self.skill_hit_recently = False
+            if direction.length() >= 50:
+                direction = direction.normalize()
+            enemy_pos += direction * 2
+            self.rect.center = enemy_pos
+
+        if direction.x < 0:
+            self.direction = "right"
+        else:
+            self.direction = "left"
+
+        return self.direction
+
+
+    def draw(self, screen):
+        if not self.eliminated:
+            self.frame_counter += 1
+            if self.frame_counter >= 5:
+                self.frame_counter = 0
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
+            if self.direction == "right":
+                screen.blit(self.frames[self.frame_index], self.rect)
+            else:
+                screen.blit(self.flipped_frames[self.frame_index], self.rect)
+            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+
+
+class EnemyManager:
+    def __init__(self, enemy_frames, width, height, min_distance, num_enemies, enemy_list):
+        self.enemy_frames = enemy_frames
+        self.width = width
+        self.height = height
+        self.min_distance = min_distance
+        self.num_enemies = num_enemies
+        self.enemy_list = enemy_list
+        self.enemies = []
+        self.spawner = Spawner(width, height, min_distance)
+
+    def spawn_multiple_enemies(self, character_pos,character):
+        sample_enemies = random.sample(self.enemy_list, self.num_enemies)
+        for enemy_name in sample_enemies:
+            enemy_pos = self.spawner.spawn_enemy(character_pos)
+            enemy = None
+            if enemy_name == "Goblin":
+                enemy = Enemy(self.enemy_frames["goblin"], enemy_pos, self.width, self.height,character)
+            elif enemy_name == "Witch":
+                enemy = Enemy(self.enemy_frames["witch"], enemy_pos, self.width, self.height,character)
+            elif enemy_name == "Skeleton":
+                enemy = Enemy(self.enemy_frames["skeleton"], enemy_pos, self.width, self.height,character)
+            # Add more enemy types here as needed
+
+            if enemy is not None:
+                self.enemies.append(enemy)
+                print(f"Spawned {enemy_name} at {enemy_pos}")
+
+    def update(self, character_pos, attacking, charging, character):
+        for enemy in self.enemies:
+            enemy.update(character_pos, attacking, charging, character)
+            if enemy.hit_count >= 3:
+                self.enemies.remove(enemy)
+ 
+
+    def draw(self, screen):
+        for enemy in self.enemies:
+            enemy.draw(screen)
+
+
+class Game:
+    def __init__(self):
+        pygame.init()
+        info = pygame.display.Info()
+        self.width = info.current_w
+        self.height = info.current_h
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.clock = pygame.time.Clock()
+        pygame.mouse.set_visible(False)
+
+        self.load_enemy_frames()
+        self.load_enemies()
+
+        self.enemy_manager = EnemyManager(self.enemy_frames, self.width, self.height, 100, 2, self.enemy_list)
+
+        self.character = Character(self.width, self.height,self.enemy_manager)
+
+        self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character)
+
+        self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
+        self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
+        self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
+
+        self.scale_factor = 0.5
+        self.obstacle = pygame.image.load('D:/SpiritKnight/Sprites/tree.png')
+        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width()*0.3), int(self.obstacle.get_height()*0.3)))
+        self.obstacle_rect = self.obstacle.get_rect(center=(self.width//2 + 200, self.height // 2 - 200))
+        self.rock = pygame.image.load('D:/SpiritKnight/Sprites/rock.png')
+        self.rock = pygame.transform.scale(self.rock, (int(self.rock.get_width()*self.scale_factor), int(self.rock.get_height()*self.scale_factor)))
+        self.rock_rect = self.rock.get_rect(center=(self.width//2-300, self.height//2))
+
+        self.game_objs = [
+            {"sprite": self.obstacle, "rect": self.obstacle_rect},  # Tree
+            {"sprite": self.rock, "rect": self.rock_rect},  # Rock
+            {"sprite": self.character.frames[0], "rect": self.character.character_rect},  # Character
+        ]
+        self.update_game_objs()
+
+        self.cross = Cross(self.width, self.height)
+
+        # UI elements
+        self.charge_ui = pygame.image.load('D:/SpiritKnight/Sprites/Skill icon.png')
+        self.charge_ui = pygame.transform.scale(self.charge_ui, (int(self.charge_ui.get_width() * self.scale_factor), int(self.charge_ui.get_height() * self.scale_factor)))
+        self.charge_ui_rect = self.charge_ui.get_rect(center=(1380, 45))
+        self.dash_ui = pygame.image.load('D:/SpiritKnight/Sprites/Dash icon2.png')
+        self.dash_ui = pygame.transform.scale(self.dash_ui, (int(self.dash_ui.get_width() * self.scale_factor), int(self.dash_ui.get_height() * self.scale_factor)))
+        self.dash_ui_rect = self.dash_ui.get_rect(center=(1280, 45))
+        self.cooldown_effect = pygame.image.load('D:/SpiritKnight/Sprites/Skill cooldown.png')
+        self.cooldown_effect = pygame.transform.scale(self.cooldown_effect, (int(self.cooldown_effect.get_width() * self.scale_factor), int(self.cooldown_effect.get_height() * self.scale_factor)))
+        self.cooldown_effect_rect = self.cooldown_effect.get_rect(center=(1380, 45))
+        self.cooldown_effect_2 = pygame.image.load('D:/SpiritKnight/Sprites/Dash cooldown.png')
+        self.cooldown_effect_2 = pygame.transform.scale(self.cooldown_effect_2, (int(self.cooldown_effect_2.get_width() * self.scale_factor), int(self.cooldown_effect_2.get_height() * self.scale_factor)))
+        self.cooldown_effect_2_rect = self.cooldown_effect_2.get_rect(center=(1280, 45))
+        self.Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
+        self.Hp_bar = pygame.transform.scale(self.Hp_bar, (int(self.Hp_bar.get_width() * self.scale_factor), int(self.Hp_bar.get_height() * self.scale_factor)))
+        self.Hp_bar_rect = self.Hp_bar.get_rect(topleft=(0, 0))
+        self.Inv = pygame.image.load('D:/SpiritKnight/Sprites/inv.png')
+        self.Inv = pygame.transform.scale(self.Inv, (int(self.Inv.get_width() * self.scale_factor), int(self.Inv.get_height() * self.scale_factor)))
+        self.Inv_rect = self.Inv.get_rect(topleft=(0, 0))
+        self.frame_ui = pygame.image.load('D:/SpiritKnight/Sprites/Frame2.png')
+        self.frame_ui = pygame.transform.scale(self.frame_ui, (int(self.frame_ui.get_width() * self.scale_factor), int(self.frame_ui.get_height() * self.scale_factor)))
+        self.frame_ui_rect = self.frame_ui.get_rect(center=(1380, 45))
+        self.frame_ui2 = pygame.image.load('D:/SpiritKnight/Sprites/Frame1.png')
+        self.frame_ui2 = pygame.transform.scale(self.frame_ui2, (int(self.frame_ui2.get_width() * self.scale_factor), int(self.frame_ui2.get_height() * self.scale_factor)))
+        self.frame_ui2_rect = self.frame_ui2.get_rect(center=(1280, 45))
+        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
+        self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width() * self.scale_factor), int(self.bg.get_height() * self.scale_factor)))
+
+        self.slot_inventory = {
+            "slot1": {
+                "slot_1_pos": (60, 65),
+                "status": False
+            },
+            "slot2": {
+                "slot_2_pos": (100, 65),
+                "status": False
+            }
+        }
+        
+        # self.item = Item()  # Add this to your Game class
+
+    def load_enemies(self):
+        self.enemy_list = []
+        self.enemies = {}
+        with open('D:\\SpiritKnight\\Code\\enemy_list.txt', mode='r') as file:
+            for line in file:
+                key, value = line.strip().split(': ')
+                self.enemies[key] = int(value)
+
+        for enemy, count in self.enemies.items():
+            self.enemy_list.extend([enemy] * count)
+
+    def update_game_objs(self):
+        # Clear the current game_objs list
+        self.game_objs.clear()
+        # Add character to the game_objs list
+        self.game_objs.append({"type": "character", "sprite": self.character.frames[0], "rect": self.character.character_rect})
+        # Add obstacles
+        self.game_objs.append({"type": "obstacle", "sprite": self.obstacle, "rect": self.obstacle_rect})
+        self.game_objs.append({"type": "obstacle", "sprite": self.rock, "rect": self.rock_rect})
+
+        # Add enemies to the game_objs list
+        for enemy in self.enemy_manager.enemies:
+            self.game_objs.append({"type": "enemy", "enemy": enemy, "rect": enemy.rect})
+
+
+    def load_enemy_frames(self):
+        self.enemy_frames = {}
+        self.enemy_frames["goblin"] = self.load_frames('D:/SpiritKnight/Sprites/Goblin.gif')
+        self.enemy_frames["witch"] = self.load_frames('D:/SpiritKnight/Sprites/black Wizard.gif')
+        self.enemy_frames["skeleton"] = self.load_frames('D:\SpiritKnight\Sprites\skele.gif')
+
+    def load_frames(self, gif_path):
+        gif = Image.open(gif_path)
+        frames = []
+        try:
+            while True:
+                frame = gif.copy()
+                frame = frame.convert("RGBA")
+                frames.append(pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode))
+                gif.seek(len(frames))
+        except EOFError:
+            pass
+        return frames
+
+    def draw(self):
+        # Sort game objects based on their vertical position (centery)
+        self.game_objs.sort(key=lambda obj: obj["rect"].centery)
+
+        # Draw sorted game objects
+        for obj in self.game_objs:
+            if obj["type"] == "character":
+                self.character.draw(self.screen)
+            elif obj["type"] == "enemy":
+                obj["enemy"].draw(self.screen)
+            else:
+                self.screen.blit(obj["sprite"], obj["rect"])
+
+    
+
+    def run(self):
+        while True:
+            # Clear the screen by filling it with black
+            self.screen.fill((0, 0, 0))
+
+            # Draw the background
+            self.screen.blit(self.bg, (0, 0))
+
+            # Update game objects
+            self.update_game_objs()
+
+            # Draw game objects in the sorted order
+            self.draw()
+
+            # Update character rect in cross class
+            self.cross.char_rect = self.character.character_rect
+
+            # Update enemies status
+            self.enemy_manager.update(self.character.character_rect.center, self.character.attacking, self.character.charging,self.character)
+
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Left click
+                        self.character.attacking = True
+                        self.character.attack_frame_index = 0
+                        self.character.attack_frame_counter = 0
+                        self.attack_sound.play()
+                        for enemy in self.enemy_manager.enemies:
+                            if self.character.hitbox.colliderect(enemy.rect):
+                                enemy.hit_recently = False  # Allow enemy to be hit again
+
+                    elif event.button == 3 and not self.character.charge_cooldown:  # Right click
+                        self.character.charging = True
+                        self.character.charge_frame_index = 0
+                        self.character.charge_frame_counter = 0
+                        self.character.charge_cooldown = True
+                        self.character.last_charge_time = time.time()
+                        self.charge_sound.play()
+
+            self.character.handle_keys()
+
+            # Check for collision between character hitbox and enemy
+            collision_detected = False
+            for enemy in self.enemy_manager.enemies:
+                if self.character.hitbox.colliderect(enemy.rect):
+                    collision_detected = True
+                    break  # Exit loop once a collision is found
+
+            self.character.collision = collision_detected
+
+
+            # Change color of enemy hitbox if collision occurs
+            if self.character.collision:
+                pygame.draw.rect(self.screen, (255, 255, 0), self.character.hitbox, 2)  # Yellow hitbox for character
+                for enemy in self.enemy_manager.enemies:
+                    if self.character.hitbox.colliderect(enemy.rect):
+                        pygame.draw.rect(self.screen, (255, 255, 0), enemy.rect, 2)  # Yellow hitbox for enemy
+
+
+            # Handle dashing
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LSHIFT] and not self.character.dashing and not self.character.dash_cooldown:
+                self.character.dashing = True
+                self.character.dash_frame_index = 0
+                self.character.dash_frame_counter = 0
+                self.character.last_dash_time = time.time()
+                self.character.dash_cooldown = True
+                self.dash_sound.play()
+
+            # Draw UI elements
+            self.screen.blit(self.charge_ui, self.charge_ui_rect)
+            self.screen.blit(self.dash_ui, self.dash_ui_rect)
+
+            # Handle cooldowns
+            if self.character.charge_cooldown:
+                charge_elapsed_time = time.time() - self.character.last_charge_time
+                charge_cooldown_ratio = charge_elapsed_time / self.character.charge_cooldown_time
+                cooldown_height = int(self.cooldown_effect_rect.height * (1 - charge_cooldown_ratio))
+                if cooldown_height > 0:
+                    charge_cooldown_rect = pygame.Rect(self.cooldown_effect_rect.left, self.cooldown_effect_rect.top, self.cooldown_effect_rect.width, cooldown_height)
+                    cooldown_effect_partial = self.cooldown_effect.subsurface((0, 0, self.cooldown_effect_rect.width, cooldown_height))
+                    self.screen.blit(cooldown_effect_partial, charge_cooldown_rect)
+                if charge_elapsed_time >= self.character.charge_cooldown_time:
+                    self.character.charge_cooldown = False
+
+            if self.character.dash_cooldown:
+                dash_elapsed_time = time.time() - self.character.last_dash_time
+                dash_cooldown_ratio = dash_elapsed_time / self.character.dash_cooldown_time
+                cooldown_height_2 = int(self.cooldown_effect_2_rect.height * (1 - dash_cooldown_ratio))
+                if cooldown_height_2 > 0:
+                    dash_cooldown_rect = pygame.Rect(self.cooldown_effect_2_rect.left, self.cooldown_effect_2_rect.top, self.cooldown_effect_2_rect.width, cooldown_height_2)
+                    cooldown_effect_partial_2 = self.cooldown_effect_2.subsurface((0, 0, self.cooldown_effect_2_rect.width, cooldown_height_2))
+                    self.screen.blit(cooldown_effect_partial_2, dash_cooldown_rect)
+                if dash_elapsed_time >= self.character.dash_cooldown_time:
+                    self.character.dash_cooldown = False
+
+            # Draw additional UI elements
+            self.screen.blit(self.Hp_bar, self.Hp_bar_rect.topleft)
+            self.screen.blit(self.Inv, self.Inv_rect.topleft)
+            self.screen.blit(self.frame_ui, self.frame_ui_rect)
+            self.screen.blit(self.frame_ui2, self.frame_ui2_rect)
+
+            # Draw cross
+            self.cross.draw(self.screen, self.slot_inventory)
+
+            # Update display
+            pygame.display.update()
+            self.clock.tick(60)
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
+
+
+
+
+
