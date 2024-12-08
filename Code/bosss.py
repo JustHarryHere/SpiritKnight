@@ -10,7 +10,7 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
 # Load character GIF
-character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+character_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude bigger.gif'
 character_gif = Image.open(character_gif_path)
 char_frames = []
 try:
@@ -25,7 +25,7 @@ except EOFError:
 flipped_frames = [pygame.transform.flip(frame, True, False) for frame in char_frames]
 
 # Load sprite_sheet tấn công
-attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
+attack_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
 attack_frames = []
 sprite_width, sprite_height = attack_sprite_sheet.get_width() // 6, attack_sprite_sheet.get_height()
 
@@ -38,7 +38,7 @@ for i in range(6):
 flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in attack_frames]
 
 # Load sprite_sheet nhận sát thương
-attacked_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Ouch.png').convert_alpha()
+attacked_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Ouch.png').convert_alpha()
 attacked_frames = []
 attacked_sprite_width, attacked_sprite_height = attacked_sprite_sheet.get_width() // 7, attacked_sprite_sheet.get_height()
 
@@ -49,7 +49,7 @@ for i in range(7):
 
 
 # Load boss GIF
-boss_gif_path = 'D:/SpiritKnight/Sprites/test_boss.gif'
+boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/test_boss.gif'
 boss_gif = Image.open(boss_gif_path)
 boss_frames = []
 try:
@@ -59,6 +59,20 @@ try:
         boss_frame = boss_frame.resize((250,250), Image.Resampling.LANCZOS)
         boss_frames.append(pygame.image.fromstring(boss_frame.tobytes(), boss_frame.size, boss_frame.mode))
         boss_gif.seek(len(boss_frames))
+except EOFError:
+    pass
+
+#Load jumping gif
+boss_jump_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/a42dfafbce8fb26e56f698a8bc14da5b.gif'
+boss_jump_gif = Image.open(boss_jump_gif_path)
+boss_jump_frames = []
+try:
+    while True:
+        boss_jump_frame = boss_jump_gif.copy()
+        boss_jump_frame = boss_jump_frame.convert("RGBA")
+        boss_jump_frame = boss_jump_frame.resize((250,250), Image.Resampling.LANCZOS)
+        boss_jump_frames.append(pygame.image.fromstring(boss_jump_frame.tobytes(), boss_jump_frame.size, boss_jump_frame.mode))
+        boss_jump_gif.seek(len(boss_jump_frames))
 except EOFError:
     pass
 
@@ -77,11 +91,11 @@ flipped = False
 max_hp = 100
 remaining_hp = max_hp
 hp_ratio = remaining_hp/max_hp
-dmg = 10
+dmg = 1
 attack_frame_counter = 0
 attack_frame_index = 0
 attacking = False
-char_dmg = 50
+char_dmg = 250
 boss_max_hp = 500
 boss_remaining_hp = boss_max_hp
 boss_hp_ratio = boss_remaining_hp/boss_max_hp
@@ -91,24 +105,31 @@ taking_damage = False
 damage_frame_counter = 0
 damage_frame_index = 0
 damage_frame_rate = 3
+boss_attacking = False
+boss_jump_timer = 0
+boss_attack_interval = 10000  # 10 giây
+boss_jump_frame_index = 0
+boss_jump_frame_counter = 0
+boss_jump_frame_rate = 5
+boss_damage = 30
 
 
 #PNG
 scale_factor = 0.5
-bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder (1).png')
+bg = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Map_placeholder (1).png')
 bg_rect = bg.get_rect(topleft = (0,0))
-boss_health = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP1.png')
+boss_health = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/king slime HP1.png')
 boss_health = pygame.transform.scale(boss_health, (int(boss_health.get_width()*0.7), int(boss_health.get_height()*0.7)))
 boss_health_rect = boss_health.get_rect(center = (width//2,50))
-boss_hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/king slime HP2.png')
+boss_hp_2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/king slime HP2.png')
 boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*0.7), int(boss_hp_2.get_height()*0.7)))
 boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,50))
-knife = pygame.image.load('D:/SpiritKnight/Sprites/knife.png')
+knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/knife.png')
 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
-Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP1.png')
+Hp_bar = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/HP1.png')
 Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
 Hp_bar_rect = Hp_bar.get_rect(topleft = (0,0))
-Hp_2 = pygame.image.load('D:/SpiritKnight/Sprites/HP2.png')
+Hp_2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/HP2.png')
 Hp_2 = pygame.transform.scale(Hp_2, (int(Hp_2.get_width()*scale_factor), int(Hp_2.get_height()*scale_factor)))
 Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 
@@ -116,7 +137,7 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 knife_speed = 10
 knife_speed_2 = 9
 knife_timer = 0
-knife_interval = 2000 # 8 seconds in milliseconds
+knife_interval = 5000 # 5 seconds in milliseconds
 knives_left = []  # Knives moving to the left
 knives_right = []  # Knives moving to the right
 knives_up = []
@@ -127,8 +148,8 @@ knives_top_right = []
 knives_top_left = []
 
 #Sound 
-attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
-getting_hit_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Ouch.wav')
+attack_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/sword-sound-260274.wav')
+getting_hit_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Ouch.wav')
 
 while True:
     current_time = pygame.time.get_ticks()
@@ -157,6 +178,58 @@ while True:
         char_rect.y -= 5
     if keys[pygame.K_s]:
         char_rect.y += 5
+
+    # Boss nhảy tấn công
+    if boss_attacking:
+        # Xử lý hoạt ảnh nhảy
+        boss_jump_frame_counter += 1
+        if boss_jump_frame_counter >= boss_jump_frame_rate:
+            boss_jump_frame_counter = 0
+            boss_jump_frame_index = (boss_jump_frame_index + 1) % len(boss_jump_frames)
+
+        # Kiểm tra nếu boss đã nhảy xong
+        if boss_jump_frame_index >= len(boss_jump_frames):
+            boss_attacking = False  # Quay lại trạng thái bình thường
+            boss_jump_frame_index = 0  # Reset hoạt ảnh nhảy
+            boss_jump_timer = current_time  # Cập nhật thời gian tấn công tiếp theo
+    
+        else:
+            # Di chuyển boss về phía nhân vật
+            boss_rect.x += (char_rect.x - boss_rect.x) // 50  
+            boss_rect.y += (char_rect.y - boss_rect.y) // 50
+
+            # Vẽ hoạt ảnh nhảy
+            screen.blit(boss_jump_frames[boss_jump_frame_index], boss_rect)
+
+
+            # Kết thúc hoạt ảnh nhảy
+            if boss_jump_frame_index == len(boss_jump_frames) - 1:  
+                boss_attacking = False
+                boss_jump_timer = current_time
+
+            # Kiểm tra va chạm và gây sát thương
+            if char_rect.colliderect(boss_rect) and not taking_damage:
+                taking_damage = True
+                remaining_hp -= boss_damage
+                hp_ratio = remaining_hp / max_hp
+                getting_hit_sound.play()
+
+    else:
+        # Kiểm tra thời gian tấn công
+        if current_time - boss_jump_timer > boss_attack_interval:
+            boss_attacking = True
+            boss_jump_frame_index = 0
+            boss_jump_frame_counter = 0
+
+        # Vẽ boss bình thường nếu không tấn công
+        boss_frame_counter += 1
+        if boss_frame_counter >= frame_update_rate:
+            boss_frame_counter = 0
+            boss_frame_index = (boss_frame_index + 1) % len(boss_frames)
+        screen.blit(boss_frames[boss_frame_index], boss_rect)
+
+    # Vẽ rect của boss để debug
+    pygame.draw.rect(screen, (255, 0, 0), boss_rect, 2)  # Màu đỏ, đường viền dày 2 pixel
 
     if taking_damage:
         damage_frame_counter += 1
@@ -201,16 +274,7 @@ while True:
             screen.blit(flipped_frames[frame_index], char_rect)
         else:
             screen.blit(char_frames[frame_index], char_rect)
-
-    # Update boss frame
-    boss_frame_counter += 1
-    if boss_frame_counter >= frame_update_rate:
-        boss_frame_counter = 0
-        boss_frame_index = (boss_frame_index + 1) % len(boss_frames)
-
-    # Display boss
-    screen.blit(boss_frames[boss_frame_index], boss_rect)
-
+            
     # Shoot knives every 2 seconds
     if current_time - knife_timer > knife_interval:
         knife_timer = current_time
@@ -371,8 +435,16 @@ while True:
         boss_Hp_2_partial = boss_hp_2.subsurface((boss_hp_2_rect.width - boss_health_width, 0, boss_health_width, boss_hp_2_rect.height))
         screen.blit(boss_Hp_2_partial, boss_remaining_health_rect)
 
+    if boss_remaining_hp <= 250:
+        knife_interval = 2000
+        boss_attack_interval = 4000
+        dmg = 10
+        boss_damage = 50 
+        knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/slimeball.png').convert_alpha()
+        knife = pygame.transform.scale(knife, (int(knife.get_width()*0.2), int(knife.get_height()*0.2)))
+
     # Font for displaying remaining HP
-    font = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
+    font = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
     hp_text_black = font.render(f"{remaining_hp}/{max_hp}", True, (0, 0, 0))  # Màu đen
     hp_text_rect = hp_text_black.get_rect(center=(240, 40))
     hp_text_white = font.render(f"{remaining_hp}/{max_hp}", True, (255, 255, 255))  # Màu trắng
@@ -380,7 +452,7 @@ while True:
     screen.blit(hp_text_white, hp_text_rect)
 
     # Font for displaying remaining boss_HP
-    font2 = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
+    font2 = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
     boss_hp_text_black = font.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (0, 0, 0))  # Màu đen
     boss_hp_text_rect = boss_hp_text_black.get_rect(center=(width//2, 73))
     boss_hp_text_white = font2.render(f"{boss_remaining_hp}/{boss_max_hp}", True, (255, 255, 255))  # Màu trắng
@@ -389,7 +461,7 @@ while True:
 
     if remaining_hp <= 0:
         game_over = True
-        font_die = pygame.font.Font('D:/SpiritKnight/Font/Pixelmax-Regular.otf', 100)
+        font_die = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/Pixelmax-Regular.otf', 100)
         text_die_black = font_die.render(f"GAME OVER!", True, (0, 0, 0))  # Màu đen
         text_die_rect = text_die_black.get_rect(center = (width//2, height//2 - 200))
         text_die_white = font_die.render(f"GAME OVER!", True, (255, 255, 255))  # Màu trắng
@@ -401,6 +473,22 @@ while True:
                     pygame.quit()
                     sys.exit()
             # Hiển thị thông báo game over tại đây
+            pygame.display.flip()
+
+    if boss_remaining_hp <= 0:
+        win = True
+        font_win = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/Pixelmax-Regular.otf', 100)
+        text_win_black = font_win.render(f"VICTORY!", True, (0, 0, 0))  # Màu đen
+        text_win_rect = text_win_black.get_rect(center = (width//2, height//2 - 200))
+        text_win_white = font_win.render(f"VICTORY!", True, (255, 255, 255))  # Màu trắng
+        screen.blit(text_win_black, text_win_rect.move(10,10))
+        screen.blit(text_win_white, text_win_rect)
+        while win:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            # Hiển thị thông báo win tại đây
             pygame.display.flip()
 
     pygame.display.flip()
