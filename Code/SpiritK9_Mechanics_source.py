@@ -10,10 +10,10 @@ import csv
 
 pygame.mixer.init()
 
-run_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/running-6358.wav')
+run_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/running-6358.wav')
 
 # Load and play background music
-pygame.mixer.music.load('D:/SpiritKnight/Music/Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3')
+pygame.mixer.music.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3')
 pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
 
@@ -105,8 +105,8 @@ class Character:
 
 
     def slash(self):
-        self.slash_right = pygame.image.load('D:/SpiritKnight/Sprites/wind burst.png') 
-        self.slash_left = pygame.image.load('D:/SpiritKnight/Sprites/wind burst2.png')
+        self.slash_right = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/wind burst.png') 
+        self.slash_left = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/wind burst2.png')
         self.slash_rect = pygame.Rect(0, 0, self.slash_right.get_width(), self.slash_right.get_height())
         self.slash_speed = 10
         self.slash_active = False
@@ -125,7 +125,7 @@ class Character:
         self.load_dash_frames()
 
     def load_gif(self):
-        gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+        gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude bigger.gif'
         gif = Image.open(gif_path)
         self.frames = []
         try:
@@ -140,7 +140,7 @@ class Character:
         self.flipped_frames = [pygame.transform.flip(frame, True, False) for frame in self.frames]
 
     def load_attack_frames(self):
-        attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
+        attack_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude big.png').convert_alpha()
         self.attack_frames = []
         sprite_width, sprite_height = attack_sprite_sheet.get_width() // 6, attack_sprite_sheet.get_height()
 
@@ -151,7 +151,7 @@ class Character:
         self.flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in self.attack_frames]
 
     def load_charge_attack_frames(self):
-        charge_attack_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Battery.png').convert_alpha()
+        charge_attack_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Battery.png').convert_alpha()
         self.charge_attack_frames = []
         charge_sprite_width, charge_sprite_height = charge_attack_sprite_sheet.get_width() // 9, charge_attack_sprite_sheet.get_height()
 
@@ -162,7 +162,7 @@ class Character:
         self.flipped_charge_attack_frames = [pygame.transform.flip(charge_frame, True, False) for charge_frame in self.charge_attack_frames]
 
     def load_run_frames(self):
-        run_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/running.png').convert_alpha()
+        run_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/running.png').convert_alpha()
         self.run_frames = []
         run_width, run_height = run_sprite_sheet.get_width() // 8, run_sprite_sheet.get_height()
 
@@ -173,7 +173,7 @@ class Character:
         self.flipped_run_frames = [pygame.transform.flip(run_frame, True, False) for run_frame in self.run_frames]
 
     def load_dash_frames(self):
-        dash_sprite_sheet = pygame.image.load('D:/SpiritKnight/Sprites/Dash.png').convert_alpha()
+        dash_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Dash.png').convert_alpha()
         self.dash_frames = []
         dash_width, dash_height = dash_sprite_sheet.get_width() // 8, dash_sprite_sheet.get_height()
 
@@ -366,9 +366,9 @@ class Cross:
         self.frame_index = 0
         self.frame_counter = 0
         self.frame_update_rate = 5
-        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
+        self.pick_up_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav')
         self.picked_up = False
-        self.item_1 = pygame.image.load('D:/SpiritKnight/Sprites/mary1.png').convert_alpha()
+        self.item_1 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/mary1.png').convert_alpha()
         self.item_1_rect = self.item_1.get_rect(center=(75, 78))
         self.cross_frame_index = 0
 
@@ -376,9 +376,9 @@ class Cross:
         self.load_gif()
 
     def load_gif(self):
-        gif_path = 'D:/SpiritKnight/Sprites/Mary on a.gif'
+        gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Mary on a.gif'
         gif = Image.open(gif_path)
-        character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
+        character_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude bigger.gif'
         character_gif = Image.open(character_gif_path)
         
         self.char_frames = []
@@ -441,7 +441,7 @@ class LoadItem:
     def __init__(self, gif_path, enemy_rect):
         self.frames = self.load_gif(gif_path)
         self.item_gif_rect = enemy_rect
-        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
+        self.pick_up_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav')
         self.picked_up = False
         self.frame_index = 0
         self.frame_counter = 0
@@ -507,7 +507,7 @@ class Enemy:
 
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
-            self.dropped_item = LoadItem('D:/SpiritKnight/Sprites/speed.gif', self.rect)
+            self.dropped_item = LoadItem('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/speed.gif', self.rect)
 
         if not self.eliminated:
             player_pos = Vector2(character_pos)
@@ -567,7 +567,7 @@ class Skeleton(Enemy):
     def __init__(self, frames, attack_frames, initial_pos, width, height, character):
         super().__init__(frames, initial_pos, width, height, character)
         self.attack_frames = attack_frames
-        self.arrow_image = pygame.image.load('D:/SpiritKnight/Sprites/arrow.png')
+        self.arrow_image = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/arrow.png')
         self.arrow_rect = self.arrow_image.get_rect()
         self.arrow_hitbox = self.arrow_rect.inflate(-self.arrow_rect.width * 0.5, -self.arrow_rect.height * 0.5)
         self.ideal_distance = 500
@@ -679,7 +679,7 @@ class Witch(Enemy):
         super().__init__(frames, initial_pos, width, height, character)
         self.clock = clock
         self.teleport_frames = teleport_frames
-        self.teleport_circle_image = pygame.image.load('D:/SpiritKnight/Sprites/defalt circle.png').convert_alpha()
+        self.teleport_circle_image = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/defalt circle.png').convert_alpha()
         self.teleport_circle_rect = self.teleport_circle_image.get_rect()
         self.teleport_circle_angle = 0
         self.rotation_speed = 1
@@ -708,7 +708,7 @@ class Witch(Enemy):
         self.show_poison_gif = False
         self.poison_gif_display_timer = 0
         self.poison_gif_delay = 2000
-        self.poison_aoe_image = pygame.image.load('D:/SpiritKnight/Sprites/PoisonAoe.png').convert_alpha()
+        self.poison_aoe_image = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/PoisonAoe.png').convert_alpha()
         self.poison_aoe_rect = self.poison_aoe_image.get_rect()
         self.warning_circle_radius = self.poison_aoe_rect.width // 2
         self.show_poison_aoe = False
@@ -720,7 +720,7 @@ class Witch(Enemy):
 
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
-            self.dropped_item = LoadItem('D:/SpiritKnight/Sprites/speed.gif', self.rect)
+            self.dropped_item = LoadItem('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/speed.gif', self.rect)
 
         if not self.eliminated:
             player_pos = Vector2(character_pos)
@@ -879,7 +879,7 @@ class EnemyManager:
                 enemy = Witch(
                     self.enemy_frames["witch"],
                     self.enemy_frames["witch_teleport"],
-                    pygame.image.load('D:/SpiritKnight/Sprites/poison bottle.png').convert_alpha(),
+                    pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/poison bottle.png').convert_alpha(),
                     self.enemy_frames["poison"],
                     self.enemy_pos, self.width, self.height, character,
                     self.clock)
@@ -901,9 +901,8 @@ class EnemyManager:
 class Game:
     def __init__(self):
         pygame.init()
-        info = pygame.display.Info()
-        self.width = info.current_w
-        self.height = info.current_h
+        self.width = 1280
+        self.height = 720
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
         pygame.mouse.set_visible(False)
@@ -917,16 +916,16 @@ class Game:
 
         self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character)
 
-        self.attack_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/sword-sound-260274.wav')
-        self.charge_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/loud-thunder-192165.wav')
-        self.dash_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
-        self.pick_up_sound = pygame.mixer.Sound('D:/SpiritKnight/Music/Item-Pick-up-_Counter-Strike-Source_-Sound-Effect-for-editing.wav')
+        self.attack_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/sword-sound-260274.wav')
+        self.charge_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/loud-thunder-192165.wav')
+        self.dash_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav')
+        self.pick_up_sound = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav')
 
         self.scale_factor = 0.5
-        self.obstacle = pygame.image.load('D:/SpiritKnight/Sprites/tree.png')
+        self.obstacle = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/tree.png')
         self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width()*0.3), int(self.obstacle.get_height()*0.3)))
         self.obstacle_rect = self.obstacle.get_rect(center=(self.width//2 + 200, self.height // 2 - 200))
-        self.rock = pygame.image.load('D:/SpiritKnight/Sprites/rock.png')
+        self.rock = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/rock.png')
         self.rock = pygame.transform.scale(self.rock, (int(self.rock.get_width()*self.scale_factor), int(self.rock.get_height()*self.scale_factor)))
         self.rock_rect = self.rock.get_rect(center=(self.width//2-300, self.height//2))
 
@@ -940,32 +939,31 @@ class Game:
         self.cross = Cross(self.width, self.height)
 
         # UI elements
-        self.charge_ui = pygame.image.load('D:/SpiritKnight/Sprites/Skill icon.png')
+        self.charge_ui = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Skill icon.png')
         self.charge_ui = pygame.transform.scale(self.charge_ui, (int(self.charge_ui.get_width() * self.scale_factor), int(self.charge_ui.get_height() * self.scale_factor)))
-        self.charge_ui_rect = self.charge_ui.get_rect(center=(1380, 45))
-        self.dash_ui = pygame.image.load('D:/SpiritKnight/Sprites/Dash icon2.png')
+        self.charge_ui_rect = self.charge_ui.get_rect(center=(1220, 45))
+        self.dash_ui = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Dash icon2.png')
         self.dash_ui = pygame.transform.scale(self.dash_ui, (int(self.dash_ui.get_width() * self.scale_factor), int(self.dash_ui.get_height() * self.scale_factor)))
-        self.dash_ui_rect = self.dash_ui.get_rect(center=(1280, 45))
-        self.cooldown_effect = pygame.image.load('D:/SpiritKnight/Sprites/Skill cooldown.png')
+        self.dash_ui_rect = self.dash_ui.get_rect(center=(1120, 45))
+        self.cooldown_effect = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Skill cooldown.png')
         self.cooldown_effect = pygame.transform.scale(self.cooldown_effect, (int(self.cooldown_effect.get_width() * self.scale_factor), int(self.cooldown_effect.get_height() * self.scale_factor)))
-        self.cooldown_effect_rect = self.cooldown_effect.get_rect(center=(1380, 45))
-        self.cooldown_effect_2 = pygame.image.load('D:/SpiritKnight/Sprites/Dash cooldown.png')
+        self.cooldown_effect_rect = self.cooldown_effect.get_rect(center=(1220, 45))
+        self.cooldown_effect_2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Dash cooldown.png')
         self.cooldown_effect_2 = pygame.transform.scale(self.cooldown_effect_2, (int(self.cooldown_effect_2.get_width() * self.scale_factor), int(self.cooldown_effect_2.get_height() * self.scale_factor)))
-        self.cooldown_effect_2_rect = self.cooldown_effect_2.get_rect(center=(1280, 45))
-        self.Hp_bar = pygame.image.load('D:/SpiritKnight/Sprites/HP.png')
+        self.cooldown_effect_2_rect = self.cooldown_effect_2.get_rect(center=(1120, 45))
+        self.Hp_bar = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/HP.png')
         self.Hp_bar = pygame.transform.scale(self.Hp_bar, (int(self.Hp_bar.get_width() * self.scale_factor), int(self.Hp_bar.get_height() * self.scale_factor)))
         self.Hp_bar_rect = self.Hp_bar.get_rect(topleft=(0, 0))
-        self.Inv = pygame.image.load('D:/SpiritKnight/Sprites/inv.png')
+        self.Inv = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/inv.png')
         self.Inv = pygame.transform.scale(self.Inv, (int(self.Inv.get_width() * self.scale_factor), int(self.Inv.get_height() * self.scale_factor)))
         self.Inv_rect = self.Inv.get_rect(topleft=(0, 0))
-        self.frame_ui = pygame.image.load('D:/SpiritKnight/Sprites/Frame2.png')
+        self.frame_ui = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Frame2.png')
         self.frame_ui = pygame.transform.scale(self.frame_ui, (int(self.frame_ui.get_width() * self.scale_factor), int(self.frame_ui.get_height() * self.scale_factor)))
-        self.frame_ui_rect = self.frame_ui.get_rect(center=(1380, 45))
-        self.frame_ui2 = pygame.image.load('D:/SpiritKnight/Sprites/Frame1.png')
+        self.frame_ui_rect = self.frame_ui.get_rect(center=(1220, 45))
+        self.frame_ui2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Frame1.png')
         self.frame_ui2 = pygame.transform.scale(self.frame_ui2, (int(self.frame_ui2.get_width() * self.scale_factor), int(self.frame_ui2.get_height() * self.scale_factor)))
-        self.frame_ui2_rect = self.frame_ui2.get_rect(center=(1280, 45))
-        self.bg = pygame.image.load('D:/SpiritKnight/Sprites/Map_placeholder_resized.png')
-        self.bg = pygame.transform.scale(self.bg, (int(self.bg.get_width() * self.scale_factor), int(self.bg.get_height() * self.scale_factor)))
+        self.frame_ui2_rect = self.frame_ui2.get_rect(center=(1120, 45))
+        self.bg = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Map_placeholder (1).png')
 
         self.slot_inventory = {
             "slot1": {
@@ -983,7 +981,7 @@ class Game:
     def load_enemies(self):
         self.enemy_list = []
         self.enemies = {}
-        with open('D:\\SpiritKnight\\Code\\enemy_list.txt', mode='r') as file:
+        with open('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Code/enemy_list.txt', mode='r') as file:
             for line in file:
                 key, value = line.strip().split(': ')
                 self.enemies[key] = int(value)
@@ -1007,12 +1005,12 @@ class Game:
 
     def load_enemy_frames(self):
         self.enemy_frames = {}
-        self.enemy_frames["goblin"] = self.load_frames('D:/SpiritKnight/Sprites/Goblin.gif')
-        self.enemy_frames["witch"] = self.load_frames('D:/SpiritKnight/Sprites/black Wizard.gif')
-        self.enemy_frames["witch_teleport"] = self.load_frames('D:/SpiritKnight/Sprites/black Wizard teleport v.gif')
-        self.enemy_frames["skeleton"] = self.load_frames('D:/SpiritKnight/Sprites/skele.gif')
-        self.enemy_frames["skeleton_attack"] = self.load_frames('D:/SpiritKnight/Sprites/Skeleshoot.gif')
-        self.enemy_frames["poison"] = self.load_frames('D:/SpiritKnight/Sprites/Poisoncloud.gif')
+        self.enemy_frames["goblin"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Goblin.gif')
+        self.enemy_frames["witch"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/black Wizard.gif')
+        self.enemy_frames["witch_teleport"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/black Wizard teleport v.gif')
+        self.enemy_frames["skeleton"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/skele.gif')
+        self.enemy_frames["skeleton_attack"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Skeleshoot.gif')
+        self.enemy_frames["poison"] = self.load_frames('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Poisoncloud.gif')
 
 
 
@@ -1160,8 +1158,3 @@ class Game:
 if __name__ == "__main__":
     game = Game()
     game.run()
-
-
-
-
-
