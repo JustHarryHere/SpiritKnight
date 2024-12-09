@@ -47,18 +47,44 @@ for i in range(7):
     attacked_frame = attacked_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
     attacked_frames.append(attacked_frame)
 
+# Load dấu chấm than GIF
+exclamation_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/!.gif'  # Đường dẫn tới file dấu chấm than
+exclamation_gif = Image.open(exclamation_gif_path)
+exclamation_frames = []
+try:
+    while True:
+        exclamation_frame = exclamation_gif.copy()
+        exclamation_frame = exclamation_frame.convert("RGBA")
+        exclamation_frames.append(pygame.image.fromstring(exclamation_frame.tobytes(), exclamation_frame.size, exclamation_frame.mode))
+        exclamation_gif.seek(len(exclamation_frames))
+except EOFError:
+    pass
 
 # Load boss GIF
-boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/test_boss.gif'
+boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Slime king smily.gif'
 boss_gif = Image.open(boss_gif_path)
 boss_frames = []
 try:
     while True:
         boss_frame = boss_gif.copy()
         boss_frame = boss_frame.convert("RGBA")
-        boss_frame = boss_frame.resize((250,250), Image.Resampling.LANCZOS)
+        boss_frame = boss_frame.resize((400,400), Image.Resampling.LANCZOS)
         boss_frames.append(pygame.image.fromstring(boss_frame.tobytes(), boss_frame.size, boss_frame.mode))
         boss_gif.seek(len(boss_frames))
+except EOFError:
+    pass
+
+# Load new boss GIF for weakened state
+weak_boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Transition.gif'  # Đường dẫn tới hình ảnh boss yếu
+weak_boss_gif = Image.open(weak_boss_gif_path)
+weak_boss_frames = []
+try:
+    while True:
+        weak_boss_frame = weak_boss_gif.copy()
+        weak_boss_frame = weak_boss_frame.convert("RGBA")
+        weak_boss_frame = weak_boss_frame.resize((400, 400), Image.Resampling.LANCZOS)
+        weak_boss_frames.append(pygame.image.fromstring(weak_boss_frame.tobytes(), weak_boss_frame.size, weak_boss_frame.mode))
+        weak_boss_gif.seek(len(weak_boss_frames))
 except EOFError:
     pass
 
@@ -124,7 +150,7 @@ boss_health_rect = boss_health.get_rect(center = (width//2,50))
 boss_hp_2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/king slime HP2.png')
 boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*0.7), int(boss_hp_2.get_height()*0.7)))
 boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,50))
-knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/knife.png')
+knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/bullet.png')
 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
 Hp_bar = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/HP1.png')
 Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
@@ -208,7 +234,7 @@ while True:
                 boss_jump_timer = current_time
 
             # Kiểm tra va chạm và gây sát thương
-            if char_rect.colliderect(boss_rect) and not taking_damage:
+            if char_rect.colliderect(boss_hitbox) and not taking_damage:
                 taking_damage = True
                 remaining_hp -= boss_damage
                 hp_ratio = remaining_hp / max_hp
@@ -220,16 +246,33 @@ while True:
             boss_attacking = True
             boss_jump_frame_index = 0
             boss_jump_frame_counter = 0
+        else: 
+            if boss_remaining_hp <= 250:
+                # Boss trong trạng thái yếu
+                knife_interval = 2000
+                boss_attack_interval = 4000
+                dmg = 10
+                boss_damage = 50 
+                knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/knife.png').convert_alpha()
+                knife = pygame.transform.scale(knife, (int(knife.get_width()*0.2), int(knife.get_height()*0.2)))
 
-        # Vẽ boss bình thường nếu không tấn công
-        boss_frame_counter += 1
-        if boss_frame_counter >= frame_update_rate:
-            boss_frame_counter = 0
-            boss_frame_index = (boss_frame_index + 1) % len(boss_frames)
-        screen.blit(boss_frames[boss_frame_index], boss_rect)
+                # Vẽ boss yếu
+                boss_frame_counter += 1
+                if boss_frame_counter >= frame_update_rate:
+                    boss_frame_counter = 0
+                    boss_frame_index = (boss_frame_index + 1) % len(weak_boss_frames)
+                screen.blit(weak_boss_frames[boss_frame_index], boss_rect)
+            else: 
+                # Vẽ boss bình thường nếu không tấn công
+                boss_frame_counter += 1
+                if boss_frame_counter >= frame_update_rate:
+                    boss_frame_counter = 0
+                    boss_frame_index = (boss_frame_index + 1) % len(boss_frames)
+                screen.blit(boss_frames[boss_frame_index], boss_rect)
 
     # Vẽ rect của boss để debug
-    pygame.draw.rect(screen, (255, 0, 0), boss_rect, 2)  # Màu đỏ, đường viền dày 2 pixel
+    boss_hitbox = boss_rect.inflate(-200,-200)
+    pygame.draw.rect(screen, (255, 0, 0), boss_hitbox, 2)  # Màu đỏ, đường viền dày 2 pixel
 
     if taking_damage:
         damage_frame_counter += 1
@@ -260,7 +303,7 @@ while True:
         else:
             attack_frame = attack_frames[attack_frame_index]
         screen.blit(attack_frame, char_rect)
-        if char_rect.colliderect(boss_rect) and current_time - boss_hit_timer > boss_hit_delay:
+        if char_rect.colliderect(boss_hitbox) and current_time - boss_hit_timer > boss_hit_delay:
             boss_remaining_hp -= char_dmg
             boss_hp_ratio = boss_remaining_hp/boss_max_hp
             boss_hit_timer = current_time
@@ -324,7 +367,6 @@ while True:
         elif knife_rect.x < 0:
             knives_left.remove(knife_rect)
 
-
     # Update knife positions (right)
     for rotated_knife, knife_rect in knives_right:
         knife_rect.x += knife_speed
@@ -333,11 +375,11 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width:
             knives_right.remove((rotated_knife, knife_rect))
-
 
     # Update knife positions (up)
     for up_knife, knife_rect in knives_up:
@@ -347,11 +389,11 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y < 0:
             knives_up.remove((up_knife, knife_rect))
-
 
     # Update knife positions (down)
     for down_knife, knife_rect in knives_down:
@@ -361,11 +403,11 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-30, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.y > height:
             knives_down.remove((down_knife, knife_rect))
-
 
     # Update knife positions (bottom left)
     for bottom_left_knife, knife_rect in knives_bottom_left:
@@ -376,6 +418,7 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y > height:
@@ -390,6 +433,7 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y > height:
@@ -404,6 +448,7 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x > width or knife_rect.y < 0:
@@ -418,6 +463,7 @@ while True:
         if char_rect.colliderect(knife_rect.inflate(-100, -100)):
             knife_rect.topleft = (-1000,-100)
             taking_damage = True
+            getting_hit_sound.play()
             remaining_hp -= dmg 
             hp_ratio = remaining_hp / max_hp
         elif knife_rect.x < 0 or knife_rect.y < 0:
@@ -430,20 +476,11 @@ while True:
         Hp_2_partial = Hp_2.subsurface((Hp_2_rect.width - health_width, 0, health_width, Hp_2_rect.height))
         screen.blit(Hp_2_partial, (Hp_bar_rect.right - health_width, Hp_bar_rect.top))
 
-
     boss_health_width = int(boss_hp_2_rect.width * (1 - boss_hp_ratio))
     boss_health_width = max(0, min(boss_hp_2_rect.width, boss_health_width))
     if boss_health_width > 0:
         boss_Hp_2_partial = boss_hp_2.subsurface((boss_hp_2_rect.width - boss_health_width, 0, boss_health_width, boss_hp_2_rect.height))
         screen.blit(boss_Hp_2_partial, (boss_hp_2_rect.right - boss_health_width, boss_hp_2_rect.top))
-
-    if boss_remaining_hp <= 250:
-        knife_interval = 2000
-        boss_attack_interval = 4000
-        dmg = 10
-        boss_damage = 50 
-        knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/slimeball.png').convert_alpha()
-        knife = pygame.transform.scale(knife, (int(knife.get_width()*0.2), int(knife.get_height()*0.2)))
 
     # Font for displaying remaining HP
     font = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/properhitboxglobal.ttf', 18)  
