@@ -1,6 +1,7 @@
 import pygame, sys, random
 from PIL import Image
 
+pygame.mixer.init()
 pygame.init()
 
 # Screen settings
@@ -43,34 +44,41 @@ frame_update_rate = 5
 goblin_frame_index = 0
 goblin_frame_counter = 0
 flipped = False
+scale_factor = 0.5
 
 # State management
 is_paused = False  # True = Gameplay is paused
 stairway_visible = False  # True if stairway is visible
 
-# Function to draw the settings popup
-def draw_settings_popup():
-    # Create a semi-transparent overlay
-    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    screen.blit(overlay, (0, 0))
-    
-    # Draw the settings box
-    popup_width, popup_height = 400, 300
-    popup_rect = pygame.Rect(
-        (width - popup_width) // 2, 
-        (height - popup_height) // 2, 
-        popup_width, popup_height
-    )
-    pygame.draw.rect(screen, (50, 50, 50), popup_rect)
-    pygame.draw.rect(screen, (255, 255, 255), popup_rect, 4)  # Border
-    
-    # Add text to the popup
-    font = pygame.font.Font(None, 48)
-    title = font.render("Settings", True, (255, 255, 255))
-    screen.blit(
-        title, 
-        (popup_rect.centerx - title.get_width() // 2, popup_rect.top + 20)
-    )
+# Load sprite_sheet 
+button1_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Start.png').convert_alpha()
+button1_frames = []
+button1_width, button1_height = button1_sprite_sheet.get_width() // 2, button1_sprite_sheet.get_height()
+
+# Assuming 2 frames in the sprite sheet
+for i in range(2):
+    button1_frame = button1_sprite_sheet.subsurface((i * button1_width, 0, button1_width, button1_height))
+    button1_frame = pygame.transform.scale(button1_frame, (int(button1_width * scale_factor), int(button1_height * scale_factor)))
+    button1_frames.append(button1_frame)
+
+button1_rect = button1_frames[0].get_rect(center=(width // 2, height // 2 - 10))
+button1_active_frame = 0  # Default frame for the button
+
+button2_sprite_sheet = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Quit.png').convert_alpha()
+button2_frames = []
+button2_width, button2_height = button2_sprite_sheet.get_width() // 2, button2_sprite_sheet.get_height()
+
+# Assuming 2 frames in the sprite sheet
+for i in range(2):
+    button2_frame = button2_sprite_sheet.subsurface((i * button2_width, 0, button2_width, button2_height))
+    button2_frame = pygame.transform.scale(button2_frame, (int(button2_width * scale_factor), int(button2_height * scale_factor)))
+    button2_frames.append(button2_frame)
+
+button2_rect = button2_frames[0].get_rect(center=(width // 2, height // 2 + 50))
+button2_active_frame = 0  # Default frame for the button
+
+#Sound 
+click = pygame.mixer.Sound('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Music/minecraft_click (mp3cut.net).mp3')
 
 # PNG loading and scaling
 scale_factor = 0.5
@@ -88,7 +96,7 @@ obstacles_rects = []
 
 # Function to handle level transition
 def next_level():
-    global stairway_rect, char_rect, bg_rect, obstacles_rects
+    global stairway_rect, char_rect, bg_rect, obstacles_rects   
     # Move the stairway to a new position
     stairway_rect.topleft = (-1000,-1000)
     # Reset character position
@@ -104,6 +112,30 @@ def next_level():
         obstacle_rect.centery = random.randint(100, height - 100)
         obstacles_rects.append(obstacle_rect)
 
+# Function to draw the settings popup
+def draw_settings_popup():
+    # Draw the settings box
+    popup_width, popup_height = 400, 300
+    popup_rect = pygame.Rect(
+        (width - popup_width) // 2, 
+        (height - popup_height) // 2, 
+        popup_width, popup_height
+    )
+    pygame.draw.rect(screen, (50, 50, 50), popup_rect)
+    pygame.draw.rect(screen, (255, 255, 255), popup_rect, 4)  # Border
+    
+    # Add text to the popup
+    font = pygame.font.Font('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Font/Pixelmax-Regular.otf', 48)
+    title = font.render("Settings", True, (255, 255, 255))
+    screen.blit(
+        title, 
+        (popup_rect.centerx - title.get_width() // 2, popup_rect.top + 20)
+    )
+    
+    # Draw button1
+    screen.blit(button1_frames[button1_active_frame], button1_rect)
+    screen.blit(button2_frames[button2_active_frame], button2_rect)
+
 # Main game loop
 while True:
     screen.fill((0, 0, 0))  # Background
@@ -118,6 +150,25 @@ while True:
                 is_paused = not is_paused  # Toggle pause state
             elif event.key == pygame.K_r and char_rect.colliderect(stairway_rect):
                 next_level()  # Move to the next level
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if is_paused and event.button == 1:  # Left mouse click
+                if button1_rect.collidepoint(event.pos):
+                    click.play()
+                    is_paused = False  # Resume the game
+                if button2_rect.collidepoint(event.pos):
+                    click.play()
+                    pygame.time.delay(int(click.get_length() * 500))  # Đợi âm thanh phát xong
+                    sys.exit()
+        elif event.type == pygame.MOUSEMOTION:  
+            if is_paused:
+                if button1_rect.collidepoint(event.pos):
+                    button1_active_frame = 1  # Highlighted frame
+                else:
+                    button1_active_frame = 0  # Default frame
+                if button2_rect.collidepoint(event.pos):
+                    button2_active_frame = 1  # Highlighted frame for button2
+                else:
+                    button2_active_frame = 0  # Default frame for button2
 
     keys = pygame.key.get_pressed()
 
@@ -146,9 +197,7 @@ while True:
             goblin_frame_counter = 0
             goblin_frame_index = (goblin_frame_index + 1) % len(goblin_idle_frames)  
 
-
     # Draw everything (always)
-
     screen.blit(goblin_idle_frames[goblin_frame_index], goblin_rect)
 
     if stairway_visible:
@@ -159,10 +208,6 @@ while True:
     else:
         screen.blit(char_frames[frame_index], char_rect)
 
-    # Draw settings popup if paused
-    if is_paused:
-        draw_settings_popup()    
-
     if char_rect.colliderect(goblin_rect): 
         goblin_rect.topleft = (-1000,-1000)
         stairway_visible = True
@@ -170,6 +215,10 @@ while True:
     # Draw obstacles
     for obstacle_rect in obstacles_rects:
         screen.blit(obstacle_image, obstacle_rect)
+
+    # Draw settings popup if paused
+    if is_paused:
+        draw_settings_popup()    
 
     pygame.display.flip()
     clock.tick(60)
