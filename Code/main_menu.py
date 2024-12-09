@@ -1,61 +1,71 @@
 import pygame
 import sys
 import time
+import subprocess
+import os
 
-# Khởi tạo Pygame
+# Initialize Pygame
 pygame.init()
 
-# Thông số của cửa sổ pygame 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+Sprites_folder = os.path.join(script_dir ,'..', 'Sprites')
+
+Music_folder = os.path.join(script_dir, '..', 'Music')
+
+Font_folder = os.path.join(script_dir, '..', 'Font')
+
+# Window parameters
 width = 1280
 height = 720
 screen = pygame.display.set_mode((width, height))
 
-
-# Màu sắc
+# Colors
 red = (255, 0, 0)
 black = (0, 0, 0)
-white = (255, 255, 255) # Màu trắng cho viền chữ
+white = (255, 255, 255)  # White color for text outline
 
-# Đường dẫn đến font Pixel
-font_path = 'D:\SpiritKnight\Font\Pixelmax-Regular.otf'  # Thay thế bằng đường dẫn chính xác đến tệp font Pixel của bạn
+# Path to Pixel font
+font_path = os.path.join(Font_folder, 'Pixelmax-Regular.otf')  # Replace with the correct path to your Pixel font file
 
-# Font chữ Pixel
+# Pixel font
 font = pygame.font.Font(font_path, 55)
-title_font = pygame.font.Font(font_path, 120)  # Font chữ lớn hơn cho tiêu đề
+title_font = pygame.font.Font(font_path, 120)  # Larger font for title
 credit_font = pygame.font.Font(font_path, 30)
-# Văn bản Menu
-text_title = title_font.render('SPIRIT KNIGHT', True, black)  # Tiêu đề game
 
-# Vị trí văn bản
+# Menu text
+text_title = title_font.render('SPIRIT KNIGHT', True, black)  # Game title
+
+# Text position
 title_rect = text_title.get_rect(center=(width // 2, height // 2 - 160))
 
-# Tải âm thanh click
-click_sound_path = 'D:\SpiritKnight\Music\minecraft_click (mp3cut.net).mp3'  # Đảm bảo thay thế bằng đường dẫn chính xác
+# Load click sound
+click_sound_path = os.path.join(Music_folder, 'minecraft_click (mp3cut.net).mp3')  # Ensure to replace with the correct path
 try:
     click_sound = pygame.mixer.Sound(click_sound_path)
 except pygame.error as e:
-    print(f"Không thể tải âm thanh click: {e}")
+    print(f"Cannot load click sound: {e}")
     sys.exit()
 
-# Tải hình ảnh
-image_path = 'D:\SpiritKnight\Sprites\Background_menu.jpg'  # Đảm bảo thay thế bằng đường dẫn chính xác
-logo_path = 'D:\SpiritKnight\Sprites\Goblin.gif'  # Đảm bảo thay thế bằng đường dẫn chính xác
-credit_bg_path = 'D:\SpiritKnight\Sprites/background_credit.jpg' # Thay thế bằng đường dẫn chính xác đến tệp ảnh nền của bạn
-options_image_path = 'D:\SpiritKnight\Sprites\Options_Background.jpg' # Thay thế bằng đường dẫn chính xác
+# Load images
+image_path = os.path.join(Sprites_folder, 'Background_menu.jpg')  # Ensure to replace with the correct path
+logo_path = os.path.join(Sprites_folder, 'Goblin.gif')  # Ensure to replace with the correct path
+credit_bg_path = os.path.join(Sprites_folder, 'background_credit.jpg')  # Replace with the correct path
+options_image_path = os.path.join(Sprites_folder, 'Options_Background.jpg')  # Replace with the correct path
 try:
     background_image = pygame.image.load(image_path)
-    background_image = pygame.transform.scale(background_image, (width, height))  # Điều chỉnh kích thước ảnh nền nếu cần
+    background_image = pygame.transform.scale(background_image, (width, height))  # Resize background image if necessary
     logo_image = pygame.image.load(logo_path)
-    logo_image = pygame.transform.scale(logo_image, (400, 200))  # Điều chỉnh kích thước logo nếu cần
+    logo_image = pygame.transform.scale(logo_image, (400, 200))  # Resize logo if necessary
     credit_background_image = pygame.image.load(credit_bg_path)
     credit_background_image = pygame.transform.scale(credit_background_image, (width, height))
     options_background_image = pygame.image.load(options_image_path)
-    options_background_image = pygame.transform.scale(options_background_image, (width, height)) # Điều chỉnh kích thước ảnh nền nếu cần
+    options_background_image = pygame.transform.scale(options_background_image, (width, height))  # Resize background image if necessary
 except pygame.error as e:
-    print(f"Không thể tải hình ảnh: {e}")
+    print(f"Cannot load images: {e}")
     sys.exit()
 
-# Hàm cắt các hình ảnh từ sprite sheet
+# Function to cut images from sprite sheet
 def load_sprite_sheet(sheet, frame_width, frame_height, num_frames):
     frames = []
     sheet_rect = sheet.get_rect()
@@ -64,20 +74,20 @@ def load_sprite_sheet(sheet, frame_width, frame_height, num_frames):
         frames.append(frame)
     return frames
 
-# Tải sprite sheet và cắt các hình ảnh
+# Load sprite sheet and cut images
 try:
-    start_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Start.png')
-    options_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Option.png')
-    quit_sprite_sheet = pygame.image.load('D:\SpiritKnight\Sprites\Quit.png')
+    start_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Start.png'))
+    options_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Option.png'))
+    quit_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Quit.png'))
 
-    start_frames = load_sprite_sheet(start_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
-    options_frames = load_sprite_sheet(options_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
-    quit_frames = load_sprite_sheet(quit_sprite_sheet, 480, 75, 2)  # Chỉnh sửa với kích thước và số lượng khung hình
+    start_frames = load_sprite_sheet(start_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
+    options_frames = load_sprite_sheet(options_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
+    quit_frames = load_sprite_sheet(quit_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
 except pygame.error as e:
-    print(f"Không thể tải sprite sheet: {e}")
+    print(f"Cannot load sprite sheet: {e}")
     sys.exit()
 
-# Lớp Button để quản lý sprite
+# Button class to manage sprites
 class Button:
     def __init__(self, frames, pos):
         self.frames = frames
@@ -93,37 +103,37 @@ class Button:
     def check_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
             self.pressed = True
-            click_sound.play() # Phát âm thanh khi nút được click
+            click_sound.play()  # Play sound when button is clicked
         if event.type == pygame.MOUSEBUTTONUP and self.rect.collidepoint(event.pos):
             self.pressed = False
             return True
         return False
-    
-# Tạo biến để lưu trạng thái của ô vuông
+
+# Variable to store checkbox state
 music_on = True
 
-# Hàm để vẽ ô vuông và dấu tick
+# Function to draw checkbox and tick
 def draw_checkbox(surface, pos, checked):
     rect = pygame.Rect(pos, (30, 30))
-    pygame.draw.rect(surface, black, rect, 4) 
+    pygame.draw.rect(surface, black, rect, 4)
     if checked:
-        pygame.draw.lines(surface, black, False, [(pos[0] + 5, pos[1] + 15), (pos[0] + 15, pos[1] + 25), (pos[0] + 25, pos[1] + 5)], 6) 
+        pygame.draw.lines(surface, black, False, [(pos[0] + 5, pos[1] + 15), (pos[0] + 15, pos[1] + 25), (pos[0] + 25, pos[1] + 5)], 6)
 
-# Hàm để xử lý bật/tắt nhạc khi tick vào ô vuông
+# Function to toggle music when checkbox is clicked
 def toggle_music():
     global music_on
     music_on = not music_on
     if music_on:
         pygame.mixer.music.play(-1)
-    else:    
+    else:
         pygame.mixer.music.stop()
 
-# Cập nhật hàm để hiển thị ô vuông và gọi hàm toggle_music khi tick vào ô vuông
+# Update function to display checkbox and call toggle_music when clicked
 def options_menu():
     while True:
-        screen.blit(options_background_image, (0, 0)) # Hiển thị ảnh nền cho menu tùy chọn        
-        
-        # Hiển thị ô vuông và văn bản
+        screen.blit(options_background_image, (0, 0))  # Display background for options menu
+
+        # Display checkbox and text
         draw_checkbox(screen, (width // 2 - 50, height // 2), music_on)
         checkbox_text = credit_font.render('Music', True, black)
         screen.blit(checkbox_text, (width // 2, height // 2))
@@ -137,17 +147,17 @@ def options_menu():
                     toggle_music()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return # Quay lại menu chính
+                    return  # Return to main menu
 
         pygame.display.flip()
 
-# Tạo văn bản cho nút Credit
+# Create text for Credit button
 credit_font = pygame.font.Font(font_path, 40)
 credit_text = credit_font.render('Credit', True, black)
 credit_outline = credit_font.render('Credit', True, white)
-credit_rect = credit_text.get_rect(topleft=(15, height - 80)) # Vị trí góc trái màn hình
+credit_rect = credit_text.get_rect(topleft=(15, height - 80))  # Position at bottom left
 
-# Hàm để hiển thị thông tin Credit
+# Function to display Credit information
 def show_credits():
     while True:
         screen.blit(credit_background_image, (0, 0))
@@ -156,7 +166,7 @@ def show_credits():
             "Art by: Your Artist",
             "Music by: Your Musician",
             "Special Thanks to: Your Supporters"
-            ]
+        ]
         y_offset = 100
         for line in credit_info:
             try:
@@ -164,34 +174,34 @@ def show_credits():
                 screen.blit(credit_line, (50, y_offset))
                 y_offset += 60
             except pygame.error as e:
-                print(f"Lỗi khi render văn bản: {e}")
+                print(f"Error rendering text: {e}")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                return # Quay lại menu chính khi nhấn phím hoặc click chuột
+                return  # Return to main menu when key is pressed or mouse is clicked
         pygame.display.flip()
 
-# Tạo các nút
+# Create buttons
 start_button = Button(start_frames, (width // 2, height // 2 - 50))
 options_button = Button(options_frames, (width // 2, height // 2 + 50))
 quit_button = Button(quit_frames, (width // 2, height // 2 + 150))
 
-# Tải và phát nhạc nền
-music_path = 'D:\SpiritKnight\Music\Melancholic Walk.mp3'  # Thay thế bằng đường dẫn chính xác đến tệp nhạc của bạn
+# Load and play background music
+music_path = os.path.join(Music_folder, 'Melancholic Walk.mp3')  # Replace with correct path
 try:
     pygame.mixer.music.load(music_path)
-    pygame.mixer.music.play(-1)  # Phát nhạc lặp lại không ngừng
+    pygame.mixer.music.play(-1)  # Play music in a loop
 except pygame.error as e:
-    print(f"Không thể tải nhạc: {e}")
+    print(f"Cannot load music: {e}")
     sys.exit()
 
-# Hiển thị logo trước khi vào menu chính
+# Function to show logo before main menu
 def show_logo():
     start_time = time.time()
-    while time.time() - start_time < 3:  # Hiển thị logo trong 3 giây
+    while time.time() - start_time < 3:  # Show logo for 3 seconds
         screen.fill(red)
         screen.blit(logo_image, (width // 2 - logo_image.get_width() // 2, height // 2 - logo_image.get_height() // 2))
         pygame.display.flip()
@@ -200,42 +210,42 @@ def show_logo():
                 pygame.quit()
                 sys.exit()
 
-# Chức năng Main Menu
+# Main menu function
 def main_menu():
     while True:
-        screen.blit(background_image, (0, 0))  # Hiển thị ảnh nền
+        screen.blit(background_image, (0, 0))  # Display background
 
-        # Hiển thị tiêu đề với viền trắng và chữ đen
+        # Display title with white outline and black text
         outline_title = title_font.render('SPIRIT KNIGHT', True, white)
         main_title = title_font.render('SPIRIT KNIGHT', True, black)
 
-        # Vị trí tiêu đề
+        # Title position
         outline_rect = outline_title.get_rect(center=(width // 2, height // 2 - 160))
         main_rect = main_title.get_rect(center=(width // 2, height // 2 - 160))
 
-        # Render tiêu đề với viền
-        for dx in [-3, -2, -1, 1, 2, 3]:            
+        for dx in [-3, -2, -1, 1, 2, 3]:
             for dy in [-3, -2, -1, 1, 2, 3]:
                 screen.blit(outline_title, outline_rect.move(dx, dy))
-                screen.blit(main_title, main_rect)
+        screen.blit(main_title, main_rect)
 
-        # Hiển thị nút
+        # Draw buttons
         start_button.draw(screen)
         options_button.draw(screen)
         quit_button.draw(screen)
-        screen.blit(credit_outline, credit_rect.move(2, 2)) # Viền trắng chữ Credit
-        screen.blit(credit_text, credit_rect) # Chữ Credit đen
+        screen.blit(credit_outline, credit_rect.move(2, 2))  # Credit text outline
+        screen.blit(credit_text, credit_rect)  # Credit text
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if start_button.check_click(event):
-                # Bắt đầu trò chơi
-                return  # Thay bằng hàm bắt đầu trò chơi thực tế
+                # Run the SpiritK9_Mechanics_source_update script
+                pygame.quit()  # Quit Pygame to properly transition to the main game
+                subprocess.run(['python', os.path.join(script_dir, 'SpiritK9_Mechanics_source_update.py')])
+                return  # Exit the main menu loop
             if options_button.check_click(event):
-                # Tùy chọn trò chơi
-                options_menu() # Gọi hàm options_menu
+                options_menu()  # Call options menu function
             if quit_button.check_click(event):
                 pygame.quit()
                 sys.exit()
@@ -244,17 +254,8 @@ def main_menu():
 
         pygame.display.flip()
 
-# Gọi hàm Hiển thị Logo 
+# Call the show_logo function
 show_logo()
 
-# Gọi hàm Main Menu
+# Call the main_menu function
 main_menu()
-
-# Vòng lặp game chính (ví dụ)
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-    screen.blit(background_image, (0, 0))  # Hiển thị ảnh nền
-    pygame.display.flip()
