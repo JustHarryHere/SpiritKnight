@@ -47,19 +47,6 @@ for i in range(7):
     attacked_frame = attacked_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
     attacked_frames.append(attacked_frame)
 
-# Load dấu chấm than GIF
-exclamation_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/!.gif'  # Đường dẫn tới file dấu chấm than
-exclamation_gif = Image.open(exclamation_gif_path)
-exclamation_frames = []
-try:
-    while True:
-        exclamation_frame = exclamation_gif.copy()
-        exclamation_frame = exclamation_frame.convert("RGBA")
-        exclamation_frames.append(pygame.image.fromstring(exclamation_frame.tobytes(), exclamation_frame.size, exclamation_frame.mode))
-        exclamation_gif.seek(len(exclamation_frames))
-except EOFError:
-    pass
-
 # Load boss GIF
 boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Slime king smily.gif'
 boss_gif = Image.open(boss_gif_path)
@@ -138,7 +125,6 @@ boss_jump_frame_index = 0
 boss_jump_frame_counter = 0
 boss_jump_frame_rate = 5
 boss_damage = 30
-
 
 #PNG
 scale_factor = 0.5
