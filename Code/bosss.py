@@ -423,17 +423,19 @@ while True:
         elif knife_rect.x < 0 or knife_rect.y < 0:
             knives_top_left.remove((top_left_knife, knife_rect))
 
-    health_width = int(Hp_2_rect.width * (1 - hp_ratio))    
+    # Cập nhật và vẽ thanh máu
+    health_width = int(Hp_2_rect.width * (1 - hp_ratio))
+    health_width = max(0, min(Hp_2_rect.width, health_width))
     if health_width > 0:
-        remaining_health_rect = pygame.Rect(Hp_2_rect.right - health_width, Hp_2_rect.top, health_width, Hp_2_rect.height)
         Hp_2_partial = Hp_2.subsurface((Hp_2_rect.width - health_width, 0, health_width, Hp_2_rect.height))
-        screen.blit(Hp_2_partial, remaining_health_rect)
+        screen.blit(Hp_2_partial, (Hp_bar_rect.right - health_width, Hp_bar_rect.top))
 
-    boss_health_width = int(boss_hp_2_rect.width * (1 - boss_hp_ratio))    
+
+    boss_health_width = int(boss_hp_2_rect.width * (1 - boss_hp_ratio))
+    boss_health_width = max(0, min(boss_hp_2_rect.width, boss_health_width))
     if boss_health_width > 0:
-        boss_remaining_health_rect = pygame.Rect(boss_hp_2_rect.right - boss_health_width, boss_hp_2_rect.top, boss_health_width, boss_hp_2_rect.height)
         boss_Hp_2_partial = boss_hp_2.subsurface((boss_hp_2_rect.width - boss_health_width, 0, boss_health_width, boss_hp_2_rect.height))
-        screen.blit(boss_Hp_2_partial, boss_remaining_health_rect)
+        screen.blit(boss_Hp_2_partial, (boss_hp_2_rect.right - boss_health_width, boss_hp_2_rect.top))
 
     if boss_remaining_hp <= 250:
         knife_interval = 2000
