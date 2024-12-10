@@ -1,6 +1,5 @@
 import pygame, sys
 from PIL import Image
-from pyvidplayer import Video
 
 pygame.init()
 pygame.mixer.init()
