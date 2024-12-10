@@ -108,6 +108,12 @@ class Enemy:
         if item is not None:
             self.dropped_item = LoadItem(item, self.rect)
 
+    def update_hit_count(self, current_time): 
+        if current_time - self.last_hit_time > self.skill_hit_delay: 
+            self.hit_count += 1 
+            self.last_hit_time = current_time 
+            print(f"Hit count updated at {current_time}. Total hits: {self.hit_count}") 
+
     def update(self, character_pos, attacking, charging, character):
         current_time = time.time()
 
@@ -154,7 +160,6 @@ class Enemy:
         return self.direction
 
     def draw(self, screen):
-        print(not self.eliminated)
         if not self.eliminated:
             self.frame_counter += 1
             if self.frame_counter >= 5:
@@ -527,7 +532,6 @@ class EnemyManager:
         self.enemy_list = enemy_list
         self.enemies = []
         self.active_enemies = []
-        self.eliminated_enemies = []  # New list for eliminated enemies
         self.spawner = Spawner(width, height, min_distance)
         self.clock = clock
 
@@ -551,23 +555,20 @@ class EnemyManager:
             if enemy is not None:
                 self.enemies.append(enemy)
                 print(f"Spawned {enemy_name} at {self.enemy_pos}")
-                self.active_enemies = self.enemies
+        self.active_enemies = self.enemies
 
     def update(self, character_pos, attacking, charging, character):
         for enemy in self.active_enemies:
             enemy.update(character_pos, attacking, charging, character)
-        # Move eliminated enemies to a separate list
-        # self.eliminated_enemies.extend([enemy for enemy in self.enemies if enemy.eliminated])
+
         self.active_enemies = [enemy for enemy in self.enemies if not enemy.eliminated]
-        if not self.enemies:  # No active enemies left
-            # self.next_level()  # Call a method to move to the next level
+        if not self.active_enemies:  # No active enemies left
+            self.next_level()  # Call a method to move to the next level
             pass
 
     def draw(self, screen):
         for enemy in self.enemies:
             enemy.draw(screen)
-        # for enemy in self.eliminated_enemies:
-        #     enemy.draw(screen)
 
     def next_level(self):
         self.enemies = []
