@@ -246,10 +246,10 @@ class Skeleton(Enemy):
         self.arrow_hitbox = self.arrow_rect.inflate(-self.arrow_rect.width * 0.5, -self.arrow_rect.height * 0.5)
         self.ideal_distance = 500
         self.enemy_speed = 3
-        self.arrow_speed = 15
+        self.arrow_speed = 10
         self.arrow_active = False
         self.last_arrow_time = 0
-        self.arrow_cooldown = 2
+        self.arrow_cooldown = 3.5
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
