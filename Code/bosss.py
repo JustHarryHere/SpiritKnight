@@ -1,5 +1,6 @@
 import pygame, sys
 from PIL import Image
+from pyvidplayer import Video
 
 pygame.init()
 pygame.mixer.init()
@@ -62,32 +63,47 @@ except EOFError:
     pass
 
 # Load new boss GIF for weakened state
-weak_boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Transition.gif'  # Đường dẫn tới hình ảnh boss yếu
+weak_boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/test_boss.gif'  # Đường dẫn tới hình ảnh boss yếu
 weak_boss_gif = Image.open(weak_boss_gif_path)
 weak_boss_frames = []
 try:
     while True:
         weak_boss_frame = weak_boss_gif.copy()
         weak_boss_frame = weak_boss_frame.convert("RGBA")
-        weak_boss_frame = weak_boss_frame.resize((400, 400), Image.Resampling.LANCZOS)
+        weak_boss_frame = weak_boss_frame.resize((400,400), Image.Resampling.LANCZOS)
         weak_boss_frames.append(pygame.image.fromstring(weak_boss_frame.tobytes(), weak_boss_frame.size, weak_boss_frame.mode))
         weak_boss_gif.seek(len(weak_boss_frames))
 except EOFError:
     pass
 
 #Load jumping gif
-boss_jump_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/a42dfafbce8fb26e56f698a8bc14da5b.gif'
+boss_jump_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/jump.gif'
 boss_jump_gif = Image.open(boss_jump_gif_path)
 boss_jump_frames = []
 try:
     while True:
         boss_jump_frame = boss_jump_gif.copy()
         boss_jump_frame = boss_jump_frame.convert("RGBA")
-        boss_jump_frame = boss_jump_frame.resize((250,250), Image.Resampling.LANCZOS)
+        boss_jump_frame = boss_jump_frame.resize((400,400), Image.Resampling.LANCZOS)
         boss_jump_frames.append(pygame.image.fromstring(boss_jump_frame.tobytes(), boss_jump_frame.size, boss_jump_frame.mode))
         boss_jump_gif.seek(len(boss_jump_frames))
 except EOFError:
     pass
+
+# Load weakened attack GIF
+weak_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/a42dfafbce8fb26e56f698a8bc14da5b.gif'  # Đường dẫn tới hoạt ảnh tấn công yếu
+weak_attack_gif = Image.open(weak_attack_gif_path)
+weak_attack_frames = []
+try:
+    while True:
+        weak_attack_frame = weak_attack_gif.copy()
+        weak_attack_frame = weak_attack_frame.convert("RGBA")
+        weak_attack_frame = weak_attack_frame.resize((400, 400), Image.Resampling.LANCZOS)
+        weak_attack_frames.append(pygame.image.fromstring(weak_attack_frame.tobytes(), weak_attack_frame.size, weak_attack_frame.mode))
+        weak_attack_gif.seek(len(weak_attack_frames))
+except EOFError:
+    pass
+
 
 # Rectangles
 char_rect = char_frames[0].get_rect(center=(width // 2 - 300, height // 2))
@@ -125,6 +141,10 @@ boss_jump_frame_index = 0
 boss_jump_frame_counter = 0
 boss_jump_frame_rate = 5
 boss_damage = 30
+
+weak_attack_frame_index = 0
+weak_attack_frame_counter = 0
+weak_attack_frame_rate = 5  # Tốc độ hiển thị khung hình của hoạt ảnh tấn công yếu
 
 #PNG
 scale_factor = 0.5
@@ -193,31 +213,53 @@ while True:
 
     # Boss nhảy tấn công
     if boss_attacking:
-        # Xử lý hoạt ảnh nhảy
-        boss_jump_frame_counter += 1
-        if boss_jump_frame_counter >= boss_jump_frame_rate:
-            boss_jump_frame_counter = 0
-            boss_jump_frame_index = (boss_jump_frame_index + 1) % len(boss_jump_frames)
+        if boss_remaining_hp > 250:
+            # Xử lý hoạt ảnh nhảy
+            boss_jump_frame_counter += 1
+            if boss_jump_frame_counter >= boss_jump_frame_rate:
+                boss_jump_frame_counter = 0
+                boss_jump_frame_index = (boss_jump_frame_index + 1) % len(boss_jump_frames)
 
-        # Kiểm tra nếu boss đã nhảy xong
-        if boss_jump_frame_index >= len(boss_jump_frames):
-            boss_attacking = False  # Quay lại trạng thái bình thường
-            boss_jump_frame_index = 0  # Reset hoạt ảnh nhảy
-            boss_jump_timer = current_time  # Cập nhật thời gian tấn công tiếp theo
-    
-        else:
-            # Di chuyển boss về phía nhân vật
-            boss_rect.x += (char_rect.x - boss_rect.x) // 50  
-            boss_rect.y += (char_rect.y - boss_rect.y) // 50
+            # Kiểm tra nếu boss đã nhảy xong
+            if boss_jump_frame_index >= len(boss_jump_frames):
+                boss_attacking = False  # Quay lại trạng thái bình thường
+                boss_jump_frame_index = 0  # Reset hoạt ảnh nhảy
+                boss_jump_timer = current_time  # Cập nhật thời gian tấn công tiếp theo
+        
+            else:
+                # Di chuyển boss về phía nhân vật
+                boss_rect.x += (char_rect.x - boss_rect.x) // 50  
+                boss_rect.y += (char_rect.y - boss_rect.y) // 50
 
-            # Vẽ hoạt ảnh nhảy
-            screen.blit(boss_jump_frames[boss_jump_frame_index], boss_rect)
+                # Vẽ hoạt ảnh nhảy
+                screen.blit(boss_jump_frames[boss_jump_frame_index], boss_rect)
 
 
-            # Kết thúc hoạt ảnh nhảy
-            if boss_jump_frame_index == len(boss_jump_frames) - 1:  
-                boss_attacking = False
-                boss_jump_timer = current_time
+                # Kết thúc hoạt ảnh nhảy
+                if boss_jump_frame_index == len(boss_jump_frames) - 1:  
+                    boss_attacking = False
+                    boss_jump_timer = current_time
+
+                # Kiểm tra va chạm và gây sát thương
+                if char_rect.colliderect(boss_hitbox) and not taking_damage:
+                    taking_damage = True
+                    remaining_hp -= boss_damage
+                    hp_ratio = remaining_hp / max_hp
+                    getting_hit_sound.play()
+
+        elif boss_remaining_hp <= 250: 
+            # Xử lý hoạt ảnh tấn công yếu
+            weak_attack_frame_counter += 1
+            if weak_attack_frame_counter >= weak_attack_frame_rate:
+                weak_attack_frame_counter = 0
+                weak_attack_frame_index = (weak_attack_frame_index + 1) % len(weak_attack_frames)
+
+            # Vẽ hoạt ảnh tấn công yếu
+            screen.blit(weak_attack_frames[weak_attack_frame_index], boss_rect)
+
+            # Di chuyển boss về phía nhân vật (nếu cần)
+            boss_rect.x += (char_rect.x - boss_rect.x) // 30
+            boss_rect.y += (char_rect.y - boss_rect.y) // 30
 
             # Kiểm tra va chạm và gây sát thương
             if char_rect.colliderect(boss_hitbox) and not taking_damage:
@@ -226,12 +268,19 @@ while True:
                 hp_ratio = remaining_hp / max_hp
                 getting_hit_sound.play()
 
+            # Kiểm tra nếu hoạt ảnh tấn công yếu đã hoàn thành
+            if weak_attack_frame_index == len(weak_attack_frames) - 1:
+                boss_attacking = False
+                boss_jump_timer = current_time  # Cập nhật thời gian tấn công tiếp theo
+
     else:
         # Kiểm tra thời gian tấn công
         if current_time - boss_jump_timer > boss_attack_interval:
             boss_attacking = True
             boss_jump_frame_index = 0
             boss_jump_frame_counter = 0
+            weak_attack_frame_index = 0
+            weak_attack_frame_counter = 0
         else: 
             if boss_remaining_hp <= 250:
                 # Boss trong trạng thái yếu
