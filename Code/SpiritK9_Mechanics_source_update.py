@@ -244,8 +244,9 @@ class LoadItem:
         self.pick_up_sound.play()
 
 class Skeleton(Enemy):
-    def __init__(self, frames, attack_frames, initial_pos, width, height, character):
-        super().__init__(frames, initial_pos, width, height, character)
+    def __init__(self, frames, attack_frames, initial_pos, width, height, character, game):
+        super().__init__(frames, initial_pos, width, height, character, game)
+        self.game = game
         self.attack_frames = attack_frames
         self.arrow_image = pygame.image.load(os.path.join(Sprites_folder, 'arrow.png'))
         self.arrow_rect = self.arrow_image.get_rect()
@@ -352,8 +353,9 @@ class Skeleton(Enemy):
                 self.dropped_item.draw(screen, self.character.character_rect)
 
 class Witch(Enemy):
-    def __init__(self, frames, teleport_frames, poison_bottle_image, poison_frames, initial_pos, width, height, character, clock):
-        super().__init__(frames, initial_pos, width, height, character)
+    def __init__(self, frames, teleport_frames, poison_bottle_image, poison_frames, initial_pos, width, height, character, clock, game):
+        super().__init__(frames, initial_pos, width, height, character, game)
+        self.game = game
         self.clock = clock
         self.teleport_frames = teleport_frames
         self.teleport_circle_image = pygame.image.load(os.path.join(Sprites_folder, 'defalt circle.png')).convert_alpha()
@@ -1188,5 +1190,3 @@ class Game:
 if __name__ == "__main__":
     game = Game()
     game.run()
-
-

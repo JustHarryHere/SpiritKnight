@@ -15,10 +15,10 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 # File paths
-character_gif_path = 'D:/SpiritKnight/Sprites/lil dude bigger.gif'
-enemy_gif_path = 'D:/SpiritKnight/Sprites/Skele.gif'
-enemy_attack_gif_path = 'D:/SpiritKnight/Sprites/Skeleshoot.gif'
-arrow_image_path = 'D:/SpiritKnight/Sprites/arrow.png'
+character_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/lil dude bigger.gif'
+enemy_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Skele.gif'
+enemy_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Skeleshoot.gif'
+arrow_image_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/arrow.png'
 
 # Check if files exist
 if not all(os.path.exists(path) for path in [character_gif_path, enemy_gif_path, enemy_attack_gif_path, arrow_image_path]):
@@ -121,6 +121,16 @@ while True:
             move_y = (dy / distance) * enemy_speed
             enemy_rect.x += move_x
             enemy_rect.y += move_y
+
+        # Ensure the enemy does not go out of screen bounds
+        if enemy_rect.left < 0:
+            enemy_rect.left = 0
+        if enemy_rect.right > WIDTH:
+            enemy_rect.right = WIDTH
+        if enemy_rect.top < 0:
+            enemy_rect.top = 0
+        if enemy_rect.bottom > HEIGHT:
+            enemy_rect.bottom = HEIGHT
 
     # Initialize attack if cooldown has passed
     current_time = time.time()
