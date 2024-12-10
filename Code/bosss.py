@@ -156,7 +156,7 @@ boss_hp_2 = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKni
 boss_hp_2 = pygame.transform.scale(boss_hp_2, (int(boss_hp_2.get_width()*0.7), int(boss_hp_2.get_height()*0.7)))
 boss_hp_2_rect = boss_hp_2.get_rect(center = (width//2,50))
 knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/bullet.png')
-knife = pygame.transform.scale(knife, (int(knife.get_width()*0.3), int(knife.get_height()*0.3)))
+knife = pygame.transform.scale(knife, (int(knife.get_width()*0.5), int(knife.get_height()*0.5)))
 Hp_bar = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/HP1.png')
 Hp_bar = pygame.transform.scale(Hp_bar, (int(Hp_bar.get_width()*scale_factor), int(Hp_bar.get_height()*scale_factor)))
 Hp_bar_rect = Hp_bar.get_rect(topleft = (0,0))
@@ -288,7 +288,7 @@ while True:
                 dmg = 10
                 boss_damage = 50 
                 knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/knife.png').convert_alpha()
-                knife = pygame.transform.scale(knife, (int(knife.get_width()*0.2), int(knife.get_height()*0.2)))
+                knife = pygame.transform.scale(knife, (int(knife.get_width()*0.5), int(knife.get_height()*0.5)))
 
                 # Vẽ boss yếu
                 boss_frame_counter += 1
