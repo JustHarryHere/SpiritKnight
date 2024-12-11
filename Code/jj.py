@@ -6,6 +6,7 @@ from pygame.math import Vector2
 import math
 import os
 from spawner import Spawner
+from bosss import spawn_boss
 
 pygame.mixer.init()
 
@@ -387,78 +388,6 @@ class Witch(Enemy):
         self.poison_aoe_timer = 0
         self.poison_aoe_duration = 8000
 
-class Boss(Enemy):
-    def __init__(self, frames, attack_frames, initial_pos, width, height, character, game):
-        super().__init__(frames, initial_pos, width, height, character, game)
-        self.attack_frames = attack_frames
-        self.health = 10  # Boss có sức khỏe nhiều hơn kẻ thù thông thường
-        self.is_attacking = False
-        self.attack_timer = 0
-        self.attack_duration = 2.0
-        self.attack_frame_rate = 0.5
-
-        # Kỹ năng đặc biệt của Boss
-        self.special_attack_cooldown = 10
-        self.last_special_attack_time = 0
-        self.special_attack_active = False
-
-        # Kỹ năng triệu hồi quái vật
-        self.summon_cooldown = 15
-        self.last_summon_time = 0
-
-    def update(self, character_pos, attacking, charging, character):
-        current_time = time.time()
-
-        if self.hit_count >= self.health and not self.eliminated:
-            self.eliminated = True
-            self.drop_item()
-            print(f"Boss eliminated. Dropping item: {self.dropped_item}")
-
-        if not self.eliminated:
-            super().update(character_pos, attacking, charging, character)
-
-            # Xử lý kỹ năng đặc biệt của Boss
-            if not self.special_attack_active and current_time - self.last_special_attack_time >= self.special_attack_cooldown:
-                self.special_attack_active = True
-                self.last_special_attack_time = current_time
-                print("Boss is using special attack!")
-
-            if self.special_attack_active:
-                self.perform_special_attack(character_pos)
-                self.special_attack_active = False
-
-            # Xử lý kỹ năng triệu hồi quái vật
-            if current_time - self.last_summon_time >= self.summon_cooldown:
-                self.summon_minions()
-                self.last_summon_time = current_time
-
-        return self.direction
-
-    def perform_special_attack(self, character_pos):
-        # Logic cho kỹ năng đặc biệt của Boss, ví dụ như bắn ra một dải năng lượng
-        print(f"Performing special attack towards {character_pos}")
-
-    def summon_minions(self):
-        # Logic cho kỹ năng triệu hồi quái vật của Boss
-        print("Boss is summoning minions!")
-
-    def draw(self, screen):
-        if not self.eliminated:
-            self.frame_counter += 1
-            if self.frame_counter >= 5:
-                self.frame_counter = 0
-                self.frame_index = (self.frame_index + 1) % len(self.frames)
-            if self.direction == "right":
-                screen.blit(self.frames[self.frame_index], self.rect)
-            else:
-                screen.blit(self.flipped_frames[self.frame_index], self.rect)
-
-            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
-
-        if self.eliminated and self.dropped_item:
-            self.dropped_item.draw(screen, self.character.character_rect)
- 
-
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
         if self.hit_count >= 3 and not self.eliminated:
@@ -634,23 +563,6 @@ class EnemyManager:
                 self.enemies.append(enemy)
                 print(f"Spawned {enemy_name} at {self.enemy_pos}")
         self.active_enemies = self.enemies
-
-    def spawn_boss(self, character_pos, character, game):
-        self.enemy_pos = self.spawner.spawn_enemy(character_pos)
-        boss = Boss(
-            self.enemy_frames["boss"],
-            self.enemy_frames["boss_attack"],
-            self.enemy_pos,
-            self.width,
-            self.height,
-            character,
-            game
-        )
-        self.enemies.append(boss)
-        print(f"Spawned Boss at {self.enemy_pos}")
-        self.active_enemies = self.enemies
-
-
 
     def update(self, character_pos, attacking, charging, character):
         for enemy in self.active_enemies:
@@ -1080,35 +992,16 @@ class Game:
                 "status": False
             }
         }
+        self.level = 0
 
-        self.level = 0  # Quản lý level hiện tại
-
-    def move_next_level(self):
-        self.level += 1  # Tăng level khi chuyển sang màn chơi tiếp theo
-        self.enemy_manager.dropped_items.clear()
-        self.stair_drawn = False
-        self.obstacle_list.clear()
-        for _ in range(random.randint(5, 10)):
-            obstacle_type = random.choice(["tree", "rock"])
-            if obstacle_type == "tree":
-                obstacle_sprite = self.obstacle
-                obstacle_rect = self.obstacle.get_rect()
+    def check_and_increase_level(self):
+        if not self.enemy_manager.enemies:
+            self.level += 1
+            if self.level == 1:  # Change this value to the level at which you want to spawn the boss
+                spawn_boss()
             else:
-                obstacle_sprite = self.rock
-                obstacle_rect = self.rock.get_rect()
-
-            obstacle_rect.centerx = random.randint(100, self.width - 100)
-            obstacle_rect.centery = random.randint(100, self.height - 100)
-            self.obstacle_list.append({"sprite": obstacle_sprite, "rect": obstacle_rect})
-            print(f"Spawned obstacle at position: ({obstacle_rect.centerx}, {obstacle_rect.centery})")
-
-        self.update_game_objs()
-        
-        # Kiểm tra nếu là màn chứa Boss
-        if self.level == 5:  # i là số màn cần sinh ra Boss
-            self.enemy_manager.spawn_boss(Vector2(self.width // 4, self.height // 4), self.character, self)
-        else:
-            self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character, self)
+                self.move_next_level()
+            print(f"Level increased to {self.level}")
 
     def get_time(self):
         return self.clock.get_time()
@@ -1172,8 +1065,6 @@ class Game:
         self.enemy_frames["skeleton"] = self.load_frames(os.path.join(Sprites_folder, 'skele.gif'))
         self.enemy_frames["skeleton_attack"] = self.load_frames(os.path.join(Sprites_folder, 'Skeleshoot.gif'))
         self.enemy_frames["poison"] = self.load_frames(os.path.join(Sprites_folder, 'Poisoncloud.gif'))
-        self.enemy_frames["boss"] = self.load_frames(os.path.join(Sprites_folder, 'Slime king smily.gif')) # Tải khung hình cho boss 
-        self.enemy_frames["boss_attack"] = self.load_frames(os.path.join(Sprites_folder, 'BossAttack.gif')) # Tải khung hình tấn công của boss
 
     def load_frames(self, gif_path):
         gif = Image.open(gif_path)
@@ -1205,10 +1096,15 @@ class Game:
         self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character, self)
 
         while True:
-            self.screen.fill((0, 0, 0))
+            # self.screen.fill((0, 0, 0))
+
+            # Draw the background
             self.screen.blit(self.bg, (0, 0))
+
             self.update_game_objs()
+
             self.check_enemy_list()
+
             self.draw()
 
             if self.stair_drawn and self.character.character_rect.colliderect(self.stairway_rect):
@@ -1291,24 +1187,15 @@ class Game:
                 if dash_elapsed_time >= self.character.dash_cooldown_time:
                     self.character.dash_cooldown = False
 
-            self.screen.blit(self.Hp_bar, self.Hp_bar_rect.topleft)
-            self.screen.blit(self.Inv, self.Inv_rect.topleft)
-            self.screen.blit(self.frame_ui, self.frame_ui_rect)
-            self.screen.blit(self.frame_ui2, self.frame_ui2_rect)
-            self.cross.draw(self.screen, self.slot_inventory)
-
-            # Draw dropped items
-            for item in self.enemy_manager.dropped_items:
-                item.draw(self.screen, self.character.character_rect)
+            # Check and increase level if all enemies are eliminated
+            self.check_and_increase_level()
 
             pygame.display.update()
             self.clock.tick(60)
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
-
-
+     game = Game() 
+     game.run()
 
 
 
