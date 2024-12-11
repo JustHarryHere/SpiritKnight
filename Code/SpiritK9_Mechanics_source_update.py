@@ -107,6 +107,7 @@ class Enemy:
             ('health.gif', 0.3),
             ('damage.gif', 0.2),
             ('shield.gif', 0.1),
+            ('cross.gif', 0.1),
             (None, 0.1)
         ]
         item = random.choices([i[0] for i in items], weights=[i[1] for i in items], k=1)[0]
