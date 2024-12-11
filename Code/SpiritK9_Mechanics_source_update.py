@@ -185,10 +185,11 @@ class LoadItem:
         self.game = None  # This will be set when the item is added to the game
 
         gif_paths = {
-            'speed.gif': os.path.join(Sprites_folder, 'speed.gif'),
-            'health.gif': os.path.join(Sprites_folder, 'potion.gif'),
-            'damage.gif': os.path.join(Sprites_folder, 'damage.gif'),
-            'shield.gif': os.path.join(Sprites_folder, 'Celestial_Opposition_item_HD.png')
+            'speed.gif': os.path.join(Sprites_folder, 'wingedboot.gif'),
+            'health.gif': os.path.join(Sprites_folder, 'Trans.gif'),
+            'damage.gif': os.path.join(Sprites_folder, 'Heroine.gif'),
+            'shield.gif': os.path.join(Sprites_folder, 'shield.gif'),
+            'cross.gif' : os.path.join(Sprites_folder, 'Mary on a.gif')
         }
         gif_path = gif_paths.get(gif_name)
         if gif_path is None:
