@@ -9,10 +9,8 @@ pygame.init()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-Sprites_folder = os.path.join(script_dir ,'..', 'Sprites')
-
+Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
-
 Font_folder = os.path.join(script_dir, '..', 'Font')
 
 # Window parameters
@@ -23,24 +21,22 @@ screen = pygame.display.set_mode((width, height))
 # Colors
 red = (255, 0, 0)
 black = (0, 0, 0)
-white = (255, 255, 255)  # White color for text outline
+white = (255, 255, 255)
 
-# Path to Pixel font
-font_path = os.path.join(Font_folder, 'Pixelmax-Regular.otf')  # Replace with the correct path to your Pixel font file
-
-# Pixel font
+# Font paths and sizes
+font_path = os.path.join(Font_folder, 'Pixelmax-Regular.otf')
 font = pygame.font.Font(font_path, 55)
-title_font = pygame.font.Font(font_path, 120)  # Larger font for title
+title_font = pygame.font.Font(font_path, 120)
 credit_font = pygame.font.Font(font_path, 30)
 
 # Menu text
-text_title = title_font.render('SPIRIT KNIGHT', True, black)  # Game title
+text_title = title_font.render('SPIRIT KNIGHT', True, black)
 
 # Text position
 title_rect = text_title.get_rect(center=(width // 2, height // 2 - 160))
 
 # Load click sound
-click_sound_path = os.path.join(Music_folder, 'minecraft_click (mp3cut.net).mp3')  # Ensure to replace with the correct path
+click_sound_path = os.path.join(Music_folder, 'minecraft_click (mp3cut.net).mp3')
 try:
     click_sound = pygame.mixer.Sound(click_sound_path)
 except pygame.error as e:
@@ -48,19 +44,19 @@ except pygame.error as e:
     sys.exit()
 
 # Load images
-image_path = os.path.join(Sprites_folder, 'Background_menu.jpeg')  # Ensure to replace with the correct path
-logo_path = os.path.join(Sprites_folder, 'Goblin.gif')  # Ensure to replace with the correct path
-credit_bg_path = os.path.join(Sprites_folder, 'background_credit.jpg')  # Replace with the correct path
-options_image_path = os.path.join(Sprites_folder, 'Options_Background.jpg')  # Replace with the correct path
+image_path = os.path.join(Sprites_folder, 'Background_menu.jpeg')
+logo_path = os.path.join(Sprites_folder, 'Goblin.gif')
+credit_bg_path = os.path.join(Sprites_folder, 'blur.jpeg')
+options_image_path = os.path.join(Sprites_folder, 'blur.jpeg')
 try:
     background_image = pygame.image.load(image_path)
-    background_image = pygame.transform.scale(background_image, (width, height))  # Resize background image if necessary
+    background_image = pygame.transform.scale(background_image, (width, height))
     logo_image = pygame.image.load(logo_path)
-    logo_image = pygame.transform.scale(logo_image, (400, 200))  # Resize logo if necessary
+    logo_image = pygame.transform.scale(logo_image, (400, 200))
     credit_background_image = pygame.image.load(credit_bg_path)
     credit_background_image = pygame.transform.scale(credit_background_image, (width, height))
     options_background_image = pygame.image.load(options_image_path)
-    options_background_image = pygame.transform.scale(options_background_image, (width, height))  # Resize background image if necessary
+    options_background_image = pygame.transform.scale(options_background_image, (width, height))
 except pygame.error as e:
     print(f"Cannot load images: {e}")
     sys.exit()
@@ -74,15 +70,15 @@ def load_sprite_sheet(sheet, frame_width, frame_height, num_frames):
         frames.append(frame)
     return frames
 
-# Load sprite sheet and cut images
+# Load sprite sheets and cut images
 try:
     start_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Start.png'))
     options_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Option.png'))
     quit_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Quit.png'))
 
-    start_frames = load_sprite_sheet(start_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
-    options_frames = load_sprite_sheet(options_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
-    quit_frames = load_sprite_sheet(quit_sprite_sheet, 480, 75, 2)  # Adjust with correct dimensions and frame count
+    start_frames = load_sprite_sheet(start_sprite_sheet, 480, 75, 2)
+    options_frames = load_sprite_sheet(options_sprite_sheet, 480, 75, 2)
+    quit_frames = load_sprite_sheet(quit_sprite_sheet, 480, 75, 2)
 except pygame.error as e:
     print(f"Cannot load sprite sheet: {e}")
     sys.exit()
@@ -103,7 +99,7 @@ class Button:
     def check_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
             self.pressed = True
-            click_sound.play()  # Play sound when button is clicked
+            click_sound.play()
         if event.type == pygame.MOUSEBUTTONUP and self.rect.collidepoint(event.pos):
             self.pressed = False
             return True
@@ -112,21 +108,24 @@ class Button:
 # Variable to store checkbox state
 music_on = True
 
-# Function to draw checkbox and tick
+# Function to draw checkbox and tick with outline
 def draw_checkbox(surface, pos, checked):
     rect = pygame.Rect(pos, (30, 30))
+    
+    # Draw white outline
+    for dx in [-1, 1, 0, 0]:
+        for dy in [0, 0, -1, 1]:
+            pygame.draw.rect(surface, white, rect.move(dx, dy), 4)
+    # Draw black checkbox
     pygame.draw.rect(surface, black, rect, 4)
+    
     if checked:
+        # Draw white outline for tick
+        for dx in [-1, 1, 0, 0]:
+            for dy in [0, 0, -1, 1]:
+                pygame.draw.lines(surface, white, False, [(pos[0] + 5 + dx, pos[1] + 15 + dy), (pos[0] + 15 + dx, pos[1] + 25 + dy), (pos[0] + 25 + dx, pos[1] + 5 + dy)], 6)
+        # Draw black tick
         pygame.draw.lines(surface, black, False, [(pos[0] + 5, pos[1] + 15), (pos[0] + 15, pos[1] + 25), (pos[0] + 25, pos[1] + 5)], 6)
-
-# Function to toggle music when checkbox is clicked
-def toggle_music():
-    global music_on
-    music_on = not music_on
-    if music_on:
-        pygame.mixer.music.play(-1)
-    else:
-        pygame.mixer.music.stop()
 
 # Update function to display checkbox and call toggle_music when clicked
 def options_menu():
@@ -135,8 +134,19 @@ def options_menu():
 
         # Display checkbox and text
         draw_checkbox(screen, (width // 2 - 50, height // 2), music_on)
+        
+        # Create text with white outline
+        checkbox_outline_text = credit_font.render('Music', True, white)
         checkbox_text = credit_font.render('Music', True, black)
-        screen.blit(checkbox_text, (width // 2, height // 2))
+
+        # Position
+        text_rect = checkbox_text.get_rect(topleft=(width // 2, height // 2))
+
+        # Draw outline by blitting multiple times at offset positions
+        for dx in [-1, 1, 0, 0]:
+            for dy in [0, 0, -1, 1]:
+                screen.blit(checkbox_outline_text, text_rect.move(dx, dy))
+        screen.blit(checkbox_text, text_rect)  # Blit main text
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -151,27 +161,39 @@ def options_menu():
 
         pygame.display.flip()
 
+
 # Create text for Credit button
 credit_font = pygame.font.Font(font_path, 40)
 credit_text = credit_font.render('Credit', True, black)
 credit_outline = credit_font.render('Credit', True, white)
-credit_rect = credit_text.get_rect(topleft=(15, height - 80))  # Position at bottom left
+credit_rect = credit_text.get_rect(topleft=(15, height - 80))
 
-# Function to display Credit information
+# Function to display Credit information with outlined text
 def show_credits():
     while True:
         screen.blit(credit_background_image, (0, 0))
         credit_info = [
-            "Developed by: Your Name",
-            "Art by: Your Artist",
-            "Music by: Your Musician",
-            "Special Thanks to: Your Supporters"
+            "Developed by: Dang Vuong, Hai Dang, Minh Thanh",
+            "Art by: Nguyen Pham Thanh Tin",
+            "Music by: Kevin Macleod, Pix",
+            "Special Thanks to: Chat GPT, Copilot"
         ]
         y_offset = 100
         for line in credit_info:
             try:
-                credit_line = credit_font.render(line, True, black)
-                screen.blit(credit_line, (50, y_offset))
+                # Create text with white outline
+                credit_outline = credit_font.render(line, True, white)
+                credit_text = credit_font.render(line, True, black)
+                
+                # Position
+                text_rect = credit_text.get_rect(topleft=(50, y_offset))
+
+                # Draw outline by blitting multiple times at offset positions
+                for dx in [-1, 1, 0, 0]:
+                    for dy in [0, 0, -1, 1]:
+                        screen.blit(credit_outline, text_rect.move(dx, dy))
+                screen.blit(credit_text, text_rect)  # Blit main text
+
                 y_offset += 60
             except pygame.error as e:
                 print(f"Error rendering text: {e}")
@@ -184,13 +206,14 @@ def show_credits():
                 return  # Return to main menu when key is pressed or mouse is clicked
         pygame.display.flip()
 
+
 # Create buttons
 start_button = Button(start_frames, (width // 2, height // 2 - 50))
 options_button = Button(options_frames, (width // 2, height // 2 + 50))
 quit_button = Button(quit_frames, (width // 2, height // 2 + 150))
 
 # Load and play background music
-music_path = os.path.join(Music_folder, 'Melancholic Walk.mp3')  # Replace with correct path
+music_path = os.path.join(Music_folder, 'Melancholic Walk.mp3')
 try:
     pygame.mixer.music.load(music_path)
     pygame.mixer.music.play(-1)  # Play music in a loop
@@ -219,10 +242,11 @@ def main_menu():
         outline_title = title_font.render('SPIRIT KNIGHT', True, white)
         main_title = title_font.render('SPIRIT KNIGHT', True, black)
 
-        # Title position
+                # Title position
         outline_rect = outline_title.get_rect(center=(width // 2, height // 2 - 160))
         main_rect = main_title.get_rect(center=(width // 2, height // 2 - 160))
 
+        # Draw outline by blitting multiple times at offset positions
         for dx in [-3, -2, -1, 1, 2, 3]:
             for dy in [-3, -2, -1, 1, 2, 3]:
                 screen.blit(outline_title, outline_rect.move(dx, dy))
