@@ -1172,7 +1172,7 @@ class Game:
         self.enemy_frames["skeleton"] = self.load_frames(os.path.join(Sprites_folder, 'skele.gif'))
         self.enemy_frames["skeleton_attack"] = self.load_frames(os.path.join(Sprites_folder, 'Skeleshoot.gif'))
         self.enemy_frames["poison"] = self.load_frames(os.path.join(Sprites_folder, 'Poisoncloud.gif'))
-        self.enemy_frames["boss"] = self.load_frames(os.path.join(Sprites_folder, 'Boss.gif')) # Tải khung hình cho boss 
+        self.enemy_frames["boss"] = self.load_frames(os.path.join(Sprites_folder, 'Slime king smily.gif')) # Tải khung hình cho boss 
         self.enemy_frames["boss_attack"] = self.load_frames(os.path.join(Sprites_folder, 'BossAttack.gif')) # Tải khung hình tấn công của boss
 
     def load_frames(self, gif_path):
