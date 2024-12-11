@@ -62,7 +62,7 @@ except EOFError:
     pass
 
 # Load new boss GIF for weakened state
-weak_boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/test_boss.gif'  # Đường dẫn tới hình ảnh boss yếu
+weak_boss_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/phase 2 idle.gif'  # Đường dẫn tới hình ảnh boss yếu
 weak_boss_gif = Image.open(weak_boss_gif_path)
 weak_boss_frames = []
 try:
@@ -90,7 +90,7 @@ except EOFError:
     pass
 
 # Load weakened attack GIF
-weak_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/a42dfafbce8fb26e56f698a8bc14da5b.gif'  # Đường dẫn tới hoạt ảnh tấn công yếu
+weak_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/jumpphase2.gif'  # Đường dẫn tới hoạt ảnh tấn công yếu
 weak_attack_gif = Image.open(weak_attack_gif_path)
 weak_attack_frames = []
 try:
@@ -135,7 +135,7 @@ damage_frame_index = 0
 damage_frame_rate = 3
 boss_attacking = False
 boss_jump_timer = 0
-boss_attack_interval = 10000  # 10 giây
+boss_attack_interval = 5000  # 10 giây
 boss_jump_frame_index = 0
 boss_jump_frame_counter = 0
 boss_jump_frame_rate = 5
@@ -168,7 +168,7 @@ Hp_2_rect = Hp_2.get_rect(topleft = (0,0))
 knife_speed = 10
 knife_speed_2 = 9
 knife_timer = 0
-knife_interval = 5000 # 5 seconds in milliseconds
+knife_interval = 3000 # 5 seconds in milliseconds
 knives_left = []  # Knives moving to the left
 knives_right = []  # Knives moving to the right
 knives_up = []
@@ -280,14 +280,14 @@ while True:
             boss_jump_frame_counter = 0
             weak_attack_frame_index = 0
             weak_attack_frame_counter = 0
-        else: 
+        else:   
             if boss_remaining_hp <= 250:
                 # Boss trong trạng thái yếu
                 knife_interval = 2000
                 boss_attack_interval = 4000
                 dmg = 10
                 boss_damage = 50 
-                knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/knife.png').convert_alpha()
+                knife = pygame.image.load('C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/Teeth.png').convert_alpha()
                 knife = pygame.transform.scale(knife, (int(knife.get_width()*0.5), int(knife.get_height()*0.5)))
 
                 # Vẽ boss yếu
@@ -306,7 +306,7 @@ while True:
 
     # Vẽ rect của boss để debug
     boss_hitbox = boss_rect.inflate(-200,-200)
-    pygame.draw.rect(screen, (255, 0, 0), boss_hitbox, 2)  # Màu đỏ, đường viền dày 2 pixel
+    #pygame.draw.rect(screen, (255, 0, 0), boss_hitbox, 2)  # Màu đỏ, đường viền dày 2 pixel
 
     if taking_damage:
         damage_frame_counter += 1

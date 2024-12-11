@@ -188,7 +188,7 @@ class LoadItem:
             'speed.gif': os.path.join(Sprites_folder, 'speed.gif'),
             'health.gif': os.path.join(Sprites_folder, 'potion.gif'),
             'damage.gif': os.path.join(Sprites_folder, 'damage.gif'),
-            'shield.gif': os.path.join(Sprites_folder, 'Celestial_Opposition_item_HD.png')
+            'shield.gif': os.path.join(Sprites_folder, 'D:\SpiritKnight\Sprites\shield.png')
         }
         gif_path = gif_paths.get(gif_name)
         if gif_path is None:
