@@ -1177,7 +1177,7 @@ class Game:
             self.screen.blit(self.frame_ui2, self.frame_ui2_rect)
             self.cross.draw(self.screen, self.slot_inventory)
 
-            # Draw dropped items
+            # Draw dropped itemsd
             for item in self.enemy_manager.dropped_items:
                 item.draw(self.screen, self.character.character_rect)
 
