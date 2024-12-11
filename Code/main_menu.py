@@ -108,6 +108,15 @@ class Button:
 # Variable to store checkbox state
 music_on = True
 
+# Function to toggle music when checkbox is clicked
+def toggle_music():
+    global music_on
+    music_on = not music_on
+    if music_on:
+        pygame.mixer.music.play(-1)
+    else:
+        pygame.mixer.music.stop()
+
 # Function to draw checkbox and tick with outline
 def draw_checkbox(surface, pos, checked):
     rect = pygame.Rect(pos, (30, 30))
@@ -161,7 +170,6 @@ def options_menu():
 
         pygame.display.flip()
 
-
 # Create text for Credit button
 credit_font = pygame.font.Font(font_path, 40)
 credit_text = credit_font.render('Credit', True, black)
@@ -173,10 +181,10 @@ def show_credits():
     while True:
         screen.blit(credit_background_image, (0, 0))
         credit_info = [
-            "Developed by: Dang Vuong, Hai Dang, Minh Thanh",
-            "Art by: Nguyen Pham Thanh Tin",
-            "Music by: Kevin Macleod, Pix",
-            "Special Thanks to: Chat GPT, Copilot"
+            "Developed by: Your Name",
+            "Art by: Your Artist",
+            "Music by: Your Musician",
+            "Special Thanks to: Your Supporters"
         ]
         y_offset = 100
         for line in credit_info:
@@ -205,7 +213,6 @@ def show_credits():
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return  # Return to main menu when key is pressed or mouse is clicked
         pygame.display.flip()
-
 
 # Create buttons
 start_button = Button(start_frames, (width // 2, height // 2 - 50))
@@ -242,7 +249,7 @@ def main_menu():
         outline_title = title_font.render('SPIRIT KNIGHT', True, white)
         main_title = title_font.render('SPIRIT KNIGHT', True, black)
 
-                # Title position
+        # Title position
         outline_rect = outline_title.get_rect(center=(width // 2, height // 2 - 160))
         main_rect = main_title.get_rect(center=(width // 2, height // 2 - 160))
 
