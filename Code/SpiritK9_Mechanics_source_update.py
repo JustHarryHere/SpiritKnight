@@ -946,8 +946,8 @@ class Game:
         self.stairway = pygame.image.load(os.path.join(Sprites_folder, 'Stairway.png'))
         self.stairway = pygame.transform.scale(self.stairway, (int(self.stairway.get_width() * self.scale_factor), int(self.stairway.get_height() * self.scale_factor)))
         self.stairway_rect = self.stairway.get_rect(center=(self.width // 2, self.height // 2))
-        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'tree.png'))
-        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.3), int(self.obstacle.get_height() * 0.3)))
+        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'box.png'))
+        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.5), int(self.obstacle.get_height() * 0.5)))
         self.rock = pygame.image.load(os.path.join(Sprites_folder, 'rock.png'))
         self.rock = pygame.transform.scale(self.rock, (int(self.rock.get_width() * self.scale_factor), int(self.rock.get_height() * self.scale_factor)))
 
@@ -1031,14 +1031,11 @@ class Game:
         self.enemy_manager.dropped_items.clear()
         self.stair_drawn = False
         self.obstacle_list.clear()
-        for _ in range(random.randint(5, 10)):
-            obstacle_type = random.choice(["tree", "rock"])
+        for _ in range(random.randint(5, 8)):
+            obstacle_type = random.choice(["tree"])
             if obstacle_type == "tree":
                 obstacle_sprite = self.obstacle
                 obstacle_rect = self.obstacle.get_rect()
-            else:
-                obstacle_sprite = self.rock
-                obstacle_rect = self.rock.get_rect()
 
             obstacle_rect.centerx = random.randint(100, self.width - 100)
             obstacle_rect.centery = random.randint(100, self.height - 100)
