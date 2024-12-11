@@ -188,7 +188,7 @@ class LoadItem:
             'speed.gif': os.path.join(Sprites_folder, 'speed.gif'),
             'health.gif': os.path.join(Sprites_folder, 'potion.gif'),
             'damage.gif': os.path.join(Sprites_folder, 'damage.gif'),
-            'shield.gif': os.path.join(Sprites_folder, 'D:\SpiritKnight\Sprites\shield.png')
+            'shield.gif': os.path.join(Sprites_folder, 'Celestial_Opposition_item_HD.png')
         }
         gif_path = gif_paths.get(gif_name)
         if gif_path is None:
@@ -242,10 +242,10 @@ class Skeleton(Enemy):
         self.arrow_hitbox = self.arrow_rect.inflate(-self.arrow_rect.width * 0.5, -self.arrow_rect.height * 0.5)
         self.ideal_distance = 500
         self.enemy_speed = 3
-        self.arrow_speed = 10
+        self.arrow_speed = 15
         self.arrow_active = False
         self.last_arrow_time = 0
-        self.arrow_cooldown = 3
+        self.arrow_cooldown = 2
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
@@ -386,6 +386,78 @@ class Witch(Enemy):
         self.show_poison_aoe = False
         self.poison_aoe_timer = 0
         self.poison_aoe_duration = 8000
+
+class Boss(Enemy):
+    def __init__(self, frames, attack_frames, initial_pos, width, height, character, game):
+        super().__init__(frames, initial_pos, width, height, character, game)
+        self.attack_frames = attack_frames
+        self.health = 10  # Boss có sức khỏe nhiều hơn kẻ thù thông thường
+        self.is_attacking = False
+        self.attack_timer = 0
+        self.attack_duration = 2.0
+        self.attack_frame_rate = 0.5
+
+        # Kỹ năng đặc biệt của Boss
+        self.special_attack_cooldown = 10
+        self.last_special_attack_time = 0
+        self.special_attack_active = False
+
+        # Kỹ năng triệu hồi quái vật
+        self.summon_cooldown = 15
+        self.last_summon_time = 0
+
+    def update(self, character_pos, attacking, charging, character):
+        current_time = time.time()
+
+        if self.hit_count >= self.health and not self.eliminated:
+            self.eliminated = True
+            self.drop_item()
+            print(f"Boss eliminated. Dropping item: {self.dropped_item}")
+
+        if not self.eliminated:
+            super().update(character_pos, attacking, charging, character)
+
+            # Xử lý kỹ năng đặc biệt của Boss
+            if not self.special_attack_active and current_time - self.last_special_attack_time >= self.special_attack_cooldown:
+                self.special_attack_active = True
+                self.last_special_attack_time = current_time
+                print("Boss is using special attack!")
+
+            if self.special_attack_active:
+                self.perform_special_attack(character_pos)
+                self.special_attack_active = False
+
+            # Xử lý kỹ năng triệu hồi quái vật
+            if current_time - self.last_summon_time >= self.summon_cooldown:
+                self.summon_minions()
+                self.last_summon_time = current_time
+
+        return self.direction
+
+    def perform_special_attack(self, character_pos):
+        # Logic cho kỹ năng đặc biệt của Boss, ví dụ như bắn ra một dải năng lượng
+        print(f"Performing special attack towards {character_pos}")
+
+    def summon_minions(self):
+        # Logic cho kỹ năng triệu hồi quái vật của Boss
+        print("Boss is summoning minions!")
+
+    def draw(self, screen):
+        if not self.eliminated:
+            self.frame_counter += 1
+            if self.frame_counter >= 5:
+                self.frame_counter = 0
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
+            if self.direction == "right":
+                screen.blit(self.frames[self.frame_index], self.rect)
+            else:
+                screen.blit(self.flipped_frames[self.frame_index], self.rect)
+
+            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+
+        if self.eliminated and self.dropped_item:
+            self.dropped_item.draw(screen, self.character.character_rect)
+ 
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
@@ -563,6 +635,23 @@ class EnemyManager:
                 print(f"Spawned {enemy_name} at {self.enemy_pos}")
         self.active_enemies = self.enemies
 
+    def spawn_boss(self, character_pos, character, game):
+        self.enemy_pos = self.spawner.spawn_enemy(character_pos)
+        boss = Boss(
+            self.enemy_frames["boss"],
+            self.enemy_frames["boss_attack"],
+            self.enemy_pos,
+            self.width,
+            self.height,
+            character,
+            game
+        )
+        self.enemies.append(boss)
+        print(f"Spawned Boss at {self.enemy_pos}")
+        self.active_enemies = self.enemies
+
+
+
     def update(self, character_pos, attacking, charging, character):
         for enemy in self.active_enemies:
             direction = enemy.update(character_pos, attacking, charging, character)
@@ -583,6 +672,8 @@ class EnemyManager:
     def next_level(self):
         self.enemies = []
         self.dropped_items = []
+
+
 class Cross:
     def __init__(self, width, height):
         self.width = width
@@ -773,7 +864,7 @@ class Character:
         self.attack_frame_counter = 0
         self.charge_frame_counter = 0
         self.dash_frame_counter = 0
-        self.frame_update_rate = 5
+        self.frame_update_rate = 10
         self.attack_frame_update_rate = 2
         self.charge_frame_update_rate = 4
         self.dash_frame_update_rate = 2
@@ -990,6 +1081,35 @@ class Game:
             }
         }
 
+        self.level = 0  # Quản lý level hiện tại
+
+    def move_next_level(self):
+        self.level += 1  # Tăng level khi chuyển sang màn chơi tiếp theo
+        self.enemy_manager.dropped_items.clear()
+        self.stair_drawn = False
+        self.obstacle_list.clear()
+        for _ in range(random.randint(5, 10)):
+            obstacle_type = random.choice(["tree", "rock"])
+            if obstacle_type == "tree":
+                obstacle_sprite = self.obstacle
+                obstacle_rect = self.obstacle.get_rect()
+            else:
+                obstacle_sprite = self.rock
+                obstacle_rect = self.rock.get_rect()
+
+            obstacle_rect.centerx = random.randint(100, self.width - 100)
+            obstacle_rect.centery = random.randint(100, self.height - 100)
+            self.obstacle_list.append({"sprite": obstacle_sprite, "rect": obstacle_rect})
+            print(f"Spawned obstacle at position: ({obstacle_rect.centerx}, {obstacle_rect.centery})")
+
+        self.update_game_objs()
+        
+        # Kiểm tra nếu là màn chứa Boss
+        if self.level == 5:  # i là số màn cần sinh ra Boss
+            self.enemy_manager.spawn_boss(Vector2(self.width // 4, self.height // 4), self.character, self)
+        else:
+            self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character, self)
+
     def get_time(self):
         return self.clock.get_time()
 
@@ -1052,6 +1172,8 @@ class Game:
         self.enemy_frames["skeleton"] = self.load_frames(os.path.join(Sprites_folder, 'skele.gif'))
         self.enemy_frames["skeleton_attack"] = self.load_frames(os.path.join(Sprites_folder, 'Skeleshoot.gif'))
         self.enemy_frames["poison"] = self.load_frames(os.path.join(Sprites_folder, 'Poisoncloud.gif'))
+        self.enemy_frames["boss"] = self.load_frames(os.path.join(Sprites_folder, 'Boss.gif')) # Tải khung hình cho boss 
+        self.enemy_frames["boss_attack"] = self.load_frames(os.path.join(Sprites_folder, 'BossAttack.gif')) # Tải khung hình tấn công của boss
 
     def load_frames(self, gif_path):
         gif = Image.open(gif_path)
@@ -1185,6 +1307,7 @@ class Game:
 if __name__ == "__main__":
     game = Game()
     game.run()
+
 
 
 

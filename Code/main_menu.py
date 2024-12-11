@@ -181,10 +181,10 @@ def show_credits():
     while True:
         screen.blit(credit_background_image, (0, 0))
         credit_info = [
-            "Developed by: Your Name",
-            "Art by: Your Artist",
-            "Music by: Your Musician",
-            "Special Thanks to: Your Supporters"
+            "Developed by: Dang Vuong, Hai Dang, Minh Thanh",
+            "Art by: Nguyen Pham Thanh Tin",
+            "Music by: Kevin Macleod, Pix",
+            "Special Thanks to: Chat GPT, Copilot"
         ]
         y_offset = 100
         for line in credit_info:
