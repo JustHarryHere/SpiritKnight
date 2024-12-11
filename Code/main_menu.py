@@ -48,7 +48,7 @@ except pygame.error as e:
     sys.exit()
 
 # Load images
-image_path = os.path.join(Sprites_folder, 'Background_menu.jpg')  # Ensure to replace with the correct path
+image_path = os.path.join(Sprites_folder, 'Background_menu.jpeg')  # Ensure to replace with the correct path
 logo_path = os.path.join(Sprites_folder, 'Goblin.gif')  # Ensure to replace with the correct path
 credit_bg_path = os.path.join(Sprites_folder, 'background_credit.jpg')  # Replace with the correct path
 options_image_path = os.path.join(Sprites_folder, 'Options_Background.jpg')  # Replace with the correct path
