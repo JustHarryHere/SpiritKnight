@@ -1,4 +1,9 @@
 import pygame
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
+Font_folder = os.path.join(script_dir, '..', 'Font')
 
 class HealthBar:
     def __init__(self, max_hp, current_hp, position, scale_factor=0.5):
@@ -7,21 +12,21 @@ class HealthBar:
         self.position = position
 
         # Load images for the health bar
-        self.bar_image = pygame.image.load('D:/SpiritKnight/Sprites/HP2.png').convert_alpha()
+        self.bar_image = os.path.join(Sprites_folder, 'HP2.png')
         self.bar_image = pygame.transform.scale(
             self.bar_image, 
             (int(self.bar_image.get_width() * scale_factor), int(self.bar_image.get_height() * scale_factor))
         )
         self.bar_rect = self.bar_image.get_rect(topleft=position)
 
-        self.overlay_image = pygame.image.load('D:/SpiritKnight/Sprites/HP1.png').convert_alpha()
+        self.overlay_image = os.path.join(Sprites_folder, 'HP1.png')
         self.overlay_image = pygame.transform.scale(
             self.overlay_image, 
             (int(self.overlay_image.get_width() * scale_factor), int(self.overlay_image.get_height() * scale_factor))
         )
 
         # Font for displaying HP text
-        self.font = pygame.font.Font('D:/SpiritKnight/Font/properhitboxglobal.ttf', 18)
+        self.font = pygame.font.Font(os.path.join(Font_folder, 'properhitboxglobal.ttf'), 18)
 
     def update(self, new_hp):
         """Update the current HP value."""
