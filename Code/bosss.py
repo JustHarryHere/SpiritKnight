@@ -68,7 +68,7 @@ def spawn_boss():
         pass
 
     # Load new boss GIF for weakened state
-    weak_boss_gif_path = os.path.join(Sprites_folder, 'Transition.gif')  # Đường dẫn tới hình ảnh boss yếu
+    weak_boss_gif_path = os.path.join(Sprites_folder, 'phase 2 idle.gif')  # Đường dẫn tới hình ảnh boss yếu
     weak_boss_gif = Image.open(weak_boss_gif_path)
     weak_boss_frames = []
     try:
@@ -82,14 +82,14 @@ def spawn_boss():
         pass
 
     #Load jumping gif
-    boss_jump_gif_path = os.path.join(Sprites_folder, 'a42dfafbce8fb26e56f698a8bc14da5b.gif')
+    boss_jump_gif_path = os.path.join(Sprites_folder, 'jump.gif')
     boss_jump_gif = Image.open(boss_jump_gif_path)
     boss_jump_frames = []
     try:
         while True:
             boss_jump_frame = boss_jump_gif.copy()
             boss_jump_frame = boss_jump_frame.convert("RGBA")
-            boss_jump_frame = boss_jump_frame.resize((250,250), Image.Resampling.LANCZOS)
+            boss_jump_frame = boss_jump_frame.resize((400,400), Image.Resampling.LANCZOS)
             boss_jump_frames.append(pygame.image.fromstring(boss_jump_frame.tobytes(), boss_jump_frame.size, boss_jump_frame.mode))
             boss_jump_gif.seek(len(boss_jump_frames))
     except EOFError:
@@ -110,11 +110,11 @@ def spawn_boss():
     max_hp = 100
     remaining_hp = max_hp
     hp_ratio = remaining_hp/max_hp
-    dmg = 1
+    dmg = 5
     attack_frame_counter = 0
     attack_frame_index = 0
     attacking = False
-    char_dmg = 250
+    char_dmg = 25
     boss_max_hp = 500
     boss_remaining_hp = boss_max_hp
     boss_hp_ratio = boss_remaining_hp/boss_max_hp
@@ -130,7 +130,7 @@ def spawn_boss():
     boss_jump_frame_index = 0
     boss_jump_frame_counter = 0
     boss_jump_frame_rate = 5
-    boss_damage = 30
+    boss_damage = 0
 
     #PNG
     scale_factor = 0.5
@@ -244,7 +244,7 @@ def spawn_boss():
                     knife_interval = 2000
                     boss_attack_interval = 4000
                     dmg = 10
-                    boss_damage = 50 
+                    boss_damage = 0 
                     knife = pygame.image.load(os.path.join(Sprites_folder, 'knife.png')).convert_alpha()
                     knife = pygame.transform.scale(knife, (int(knife.get_width()*0.2), int(knife.get_height()*0.2)))
 
@@ -264,8 +264,7 @@ def spawn_boss():
 
         # Vẽ rect của boss để debug
         boss_hitbox = boss_rect.inflate(-200,-200)
-        pygame.draw.rect(screen, (255, 0, 0), boss_hitbox, 2)  # Màu đỏ, đường viền dày 2 pixel
-
+        
         if taking_damage:
             damage_frame_counter += 1
             if damage_frame_counter >= damage_frame_rate:

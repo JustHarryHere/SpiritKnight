@@ -41,7 +41,7 @@ class HealthBar:
         # Draw the HP text
         hp_text_black = self.font.render(f"{self.current_hp}/{self.max_hp}", True, (0, 0, 0))
         hp_text_white = self.font.render(f"{self.current_hp}/{self.max_hp}", True, (255, 255, 255))
-        hp_text_rect = hp_text_black.get_rect(center=(self.bar_rect.centerx , self.bar_rect.centery - 10))
+        hp_text_rect = hp_text_black.get_rect(center=(240,40))
 
         # Add shadow effect for the text
         screen.blit(hp_text_black, hp_text_rect.move(2, 2))
