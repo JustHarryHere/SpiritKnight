@@ -12,14 +12,14 @@ class HealthBar:
         self.position = position
 
         # Load images for the health bar
-        self.bar_image = os.path.join(Sprites_folder, 'HP2.png')
+        self.bar_image = pygame.image.load(os.path.join(Sprites_folder, 'HP2.png'))
         self.bar_image = pygame.transform.scale(
             self.bar_image, 
             (int(self.bar_image.get_width() * scale_factor), int(self.bar_image.get_height() * scale_factor))
         )
         self.bar_rect = self.bar_image.get_rect(topleft=position)
 
-        self.overlay_image = os.path.join(Sprites_folder, 'HP1.png')
+        self.overlay_image = pygame.image.load(os.path.join(Sprites_folder, 'HP1.png'))
         self.overlay_image = pygame.transform.scale(
             self.overlay_image, 
             (int(self.overlay_image.get_width() * scale_factor), int(self.overlay_image.get_height() * scale_factor))
@@ -46,7 +46,7 @@ class HealthBar:
         # Draw the HP text
         hp_text_black = self.font.render(f"{self.current_hp}/{self.max_hp}", True, (0, 0, 0))
         hp_text_white = self.font.render(f"{self.current_hp}/{self.max_hp}", True, (255, 255, 255))
-        hp_text_rect = hp_text_black.get_rect(center=(240,40))
+        hp_text_rect = hp_text_black.get_rect(center=(240, 40))
 
         # Add shadow effect for the text
         screen.blit(hp_text_black, hp_text_rect.move(2, 2))
