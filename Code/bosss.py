@@ -349,9 +349,13 @@ while True:
             dash_frame_counter = 0
             dash_frame_index = (dash_frame_index + 1) % len(dash_frames)
         if flipped:
-            char_rect.x += dash_speed
+            char_rect.x = min(max_x, char_rect.x + dash_speed)
         else: 
-            char_rect.x -= dash_speed
+            char_rect.x = max(min_x, char_rect.x - dash_speed)
+        if char_rect.y < top_border: 
+            char_rect.y = top_border
+        elif char_rect.y > bottom_border:
+            char_rect.y = bottom_border
         if dash_frame_index == len(dash_frames) - 1:
             dashing = False
 
