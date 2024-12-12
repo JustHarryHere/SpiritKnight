@@ -4,7 +4,7 @@ import time
 import random
 from pygame.math import Vector2
 import math
-import osa
+import os
 from spawner import Spawner
 
 pygame.mixer.init()
