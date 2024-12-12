@@ -9,6 +9,7 @@ from spawner import Spawner
 from bosss import spawn_boss
 from healthbar import HealthBar
 
+
 pygame.init()
 
 width = 1280
@@ -177,6 +178,8 @@ class LoadItem:
                 self.play()
                 if self.game:
                     self.game.remove_dropped_item(self)
+                if "wingedboot.gif" in self.item_gif_rect:  # Kiểm tra vật phẩm wingedboot
+                    self.game.character.activate_speed_boost()  # Kích hoạt tăng tốc cho nhân vật
 
     def draw(self, screen, char_rect):
         self.check_pick_up(char_rect)
@@ -692,6 +695,17 @@ class Character:
         self.load_assets()
         self.slash()
         self.reset_states()
+        self.speed = 5  # Tốc độ ban đầu của nhân vật
+        self.temp_speed = self.speed  # Tốc độ tạm thời
+        self.speed_boost_time = 0  # Thời gian tăng tốc
+
+    def activate_speed_boost(self):
+        self.temp_speed = self.speed * 2  # Tăng tốc độ lên gấp đôi
+        self.speed_boost_time = time.time()
+
+    def update_speed(self):
+        if self.temp_speed > self.speed and time.time() - self.speed_boost_time > 3:
+            self.temp_speed = self.speed
 
     def slash(self):
         self.slash_right = pygame.image.load(os.path.join(Sprites_folder, 'wind burst.png'))
@@ -1129,6 +1143,10 @@ class Game:
             health_bar.update(remaining_hp)
             health_bar.draw(screen)
 
+            self.character.update_speed()
+
+            for item in self.dropped_items:
+                item.draw(self.screen, self.character.character_rect)
 
 
             if self.stair_drawn and self.character.character_rect.colliderect(self.stairway_rect):

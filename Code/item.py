@@ -52,7 +52,7 @@ except EOFError:
     pass
 
 #Speed_potion
-speed_gif_path = 'D:/SpiritKnight/Sprites/speed.gif'
+speed_gif_path = 'D:\SpiritKnight\Sprites\wingedboot.gif'
 speed_gif = Image.open(speed_gif_path)
 speed_frames = []
 try:
