@@ -126,9 +126,33 @@ last_dash_time = 0
 dash_speed = 7
 dash_cooldown_time = 1500
 
+
+# Load sprite_sheet charge
+charge_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Battery.png')).convert_alpha()
+charge_frames = []
+charge_width, charge_height = charge_sprite_sheet.get_width() // 9, charge_sprite_sheet.get_height()
+
+# Assuming 9 frames in the sprite sheet
+for i in range(9):
+    charge_frame = charge_sprite_sheet.subsurface((i * charge_width, 0, charge_width, charge_height))
+    charge_frames.append(charge_frame)
+
+# Xoay frame lướt
+flipped_charge_frames = [pygame.transform.flip(charge_frame, True, False) for charge_frame in charge_frames]
+
+#Biến
+charge_frame_counter = 0 
+charge_frame_index = 0 
+charge_frame_update_rate = 4
+charging = False
+charge_cooldown = False
+last_charge_time = 0 
+charge_cooldown_time = 2000
+
 # Rectangles
 char_rect = char_frames[0].get_rect(center=(width // 2 - 300, height // 2))
 boss_rect = boss_frames[0].get_rect(center=(width // 2, height // 2))
+
 
 # Variables
 frame_index = 0
@@ -187,6 +211,9 @@ Charge_ui_rect = Charge_ui.get_rect(center = (1220, 45))
 Skill_frame = pygame.image.load(os.path.join(Sprites_folder, 'Frame2.png'))
 Skill_frame = pygame.transform.scale(Skill_frame, (int(Skill_frame.get_width()*scale_factor), int(Skill_frame.get_height()*scale_factor)))
 Skill_frame_rect = Skill_frame.get_rect(center = (1220, 45))
+Charge_cd_ui = pygame.image.load(os.path.join(Sprites_folder, 'Skill cooldown.png'))
+Charge_cd_ui = pygame.transform.scale(Charge_cd_ui, (int(Charge_cd_ui.get_width()*scale_factor), int(Charge_cd_ui.get_height()*scale_factor)))
+Charge_cd_ui_rect = Charge_cd_ui.get_rect(center = (1220, 45))
 Dash_ui = pygame.image.load(os.path.join(Sprites_folder, 'Dash icon2.png'))
 Dash_ui = pygame.transform.scale(Dash_ui, (int(Dash_ui.get_width()*scale_factor), int(Dash_ui.get_height()*scale_factor)))
 Dash_ui_rect = Dash_ui.get_rect(center = (1120, 45))
@@ -229,11 +256,18 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Chuột phải
-            attacking = True
-            attack_frame_index = 0
-            attack_frame_counter = 0
-            attack_sound.play()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Chuột trái
+                attacking = True
+                attack_frame_index = 0
+                attack_frame_counter = 0
+                attack_sound.play()
+            if event.button == 3 and not charge_cooldown:
+                charge_cooldown = True
+                charging = True 
+                charge_frame_index = 0
+                charge_frame_counter = 0
+                last_charge_time = current_time
     min_x, max_x = 0, width - 15 - char_rect.width
     top_border, bottom_border = 70, height - 32 - char_rect.height
 
@@ -359,6 +393,19 @@ while True:
         if dash_frame_index == len(dash_frames) - 1:
             dashing = False
 
+    elif charging: 
+        if flipped: 
+            screen.blit(flipped_charge_frames[charge_frame_index], char_rect)
+        else: 
+            screen.blit(charge_frames[charge_frame_index], char_rect)
+        charge_frame_counter += 1
+        if charge_frame_counter >= charge_frame_update_rate: 
+            charge_frame_counter = 0
+            charge_frame_index += 1
+        if charge_frame_index >= len(charge_frames):
+            charging = False
+            charge_frame_index = 0
+
     elif attacking:
         attack_frame_counter += 1
         if attack_frame_counter >= attack_frame_rate:
@@ -398,6 +445,17 @@ while True:
             screen.blit(cd_effect_partial2, Dash_cooldown_rect)
         if dash_elapsed_time > dash_cooldown_time: 
             dash_cooldown = False
+
+    if charge_cooldown: 
+        charge_elapsed_time = current_time - last_charge_time
+        charge_cooldown_ratio = charge_elapsed_time / charge_cooldown_time
+        cd_height_1 = int(Charge_cd_ui_rect.height* (1-charge_cooldown_ratio) )
+        if cd_height_1 > 0: 
+            Charge_cooldown_rect = pygame.Rect(Charge_cd_ui_rect.left, Charge_cd_ui_rect.top, Charge_cd_ui_rect.width, cd_height_1)
+            cd_effect_partial1 = Charge_cd_ui.subsurface((0,0, Charge_cd_ui_rect.width, cd_height_1))
+            screen.blit(cd_effect_partial1, Charge_cooldown_rect)
+        if charge_elapsed_time > charge_cooldown_time: 
+            charge_cooldown = False
             
     # Shoot knives every 2 seconds
     if current_time - knife_timer > knife_interval:
