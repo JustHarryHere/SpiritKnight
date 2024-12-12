@@ -9,6 +9,7 @@ from spawner import Spawner
 from bosss import spawn_boss
 from healthbar import HealthBar
 
+
 pygame.init()
 
 width = 1280
@@ -693,6 +694,7 @@ class Character:
         self.slash()
         self.reset_states()
 
+
     def slash(self):
         self.slash_right = pygame.image.load(os.path.join(Sprites_folder, 'wind burst.png'))
         self.slash_left = pygame.image.load(os.path.join(Sprites_folder, 'wind burst2.png'))
@@ -1129,6 +1131,9 @@ class Game:
             health_bar.update(remaining_hp)
             health_bar.draw(screen)
 
+
+            for item in self.dropped_items:
+                item.draw(self.screen, self.character.character_rect)
 
 
             if self.stair_drawn and self.character.character_rect.colliderect(self.stairway_rect):
