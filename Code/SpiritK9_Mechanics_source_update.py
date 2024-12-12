@@ -4,7 +4,7 @@ import time
 import random
 from pygame.math import Vector2
 import math
-import os
+import osa
 from spawner import Spawner
 
 pygame.mixer.init()
@@ -12,6 +12,7 @@ pygame.mixer.init()
 script_dir = os.path.dirname(os.path.abspath(__file__))
 Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
+
 
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))

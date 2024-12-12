@@ -30,63 +30,6 @@ run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
 pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
-
-# class LoadItem:
-#     def __init__(self, gif_name, enemy_rect):
-#         self.item_gif_rect = enemy_rect
-#         self.pick_up_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav'))
-#         self.picked_up = False
-#         self.frame_index = 0
-#         self.frame_counter = 0
-#         self.frame_update_rate = 5
-
-#         gif_paths = {
-#             'speed.gif': os.path.join(Sprites_folder, 'speed.gif'),
-#             'health.gif': os.path.join(Sprites_folder, 'potion.gif'),
-#             'damage.gif': os.path.join(Sprites_folder, 'damage.gif'),
-#             'shield.gif': os.path.join(Sprites_folder, 'Celestial_Opposition_item_HD.png')
-#         }
-
-#         gif_path = gif_paths.get(gif_name)
-#         if gif_path is None:
-#             raise ValueError(f"Unknown gif name: {gif_name}")
-
-#         self.frames = self.load_gif(gif_path)
-
-#     def load_gif(self, gif_path):
-#         frames = []
-#         gif = Image.open(gif_path)
-#         try:
-#             while True:
-#                 gif.seek(gif.tell())
-#                 frame = gif.copy().convert("RGBA")
-#                 frame = frame.resize((60, 60), Image.LANCZOS)
-#                 pygame_frame = pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode)
-#                 frames.append(pygame_frame)
-#                 gif.seek(gif.tell() + 1)
-#         except EOFError:
-#             pass
-#         return frames
-
-#     def check_pick_up(self, char_rect):
-#         keys = pygame.key.get_pressed()
-#         if keys[pygame.K_f] and not self.picked_up:
-#             if char_rect.colliderect(self.item_gif_rect):
-#                 self.picked_up = True
-#                 self.play()
-
-#     def draw(self, screen, char_rect):
-#         self.check_pick_up(char_rect)
-#         if not self.picked_up:
-#             screen.blit(self.frames[self.frame_index], self.item_gif_rect)
-#             self.frame_counter += 1
-#             if self.frame_counter >= self.frame_update_rate:
-#                 self.frame_counter = 0
-#                 self.frame_index = (self.frame_index + 1) % len(self.frames)
-
-#     def play(self):
-#         self.pick_up_sound.play()
-
 class Enemy:
     def __init__(self, frames, initial_pos, width, height, character, game):
         self.frames = frames
@@ -263,7 +206,6 @@ class Goblin(Enemy):
     def goblin_special_attack(self, character, current_time):
         if current_time - self.last_attack_time >= self.attack_delay:
             self.last_attack_time = current_time
-            character.take_damage(self.attack_damage)  # Deal damage to the character
             self.is_attacking = True  # Set attacking state
             self.attack_frame_index = 0  # Reset attack frame index for animation
 
@@ -751,15 +693,6 @@ class Character:
         self.slash()
         self.reset_states()
 
-    def draw_hp_bar(self, screen): 
-        hp_bar_width = 200 
-        hp_bar_height = 20 
-        pygame.draw.rect(screen, (255, 0, 0), (10, 10, hp_bar_width, hp_bar_height)) 
-        pygame.draw.rect(screen, (0, 255, 0), (10, 10, hp_bar_width * (self.hp / 100), hp_bar_height)) 
-
-    def take_damage(self, damage):
-        self.hp = max(0, self.hp - damage)
-
     def slash(self):
         self.slash_right = pygame.image.load(os.path.join(Sprites_folder, 'wind burst.png'))
         self.slash_left = pygame.image.load(os.path.join(Sprites_folder, 'wind burst2.png'))
@@ -1230,8 +1163,6 @@ class Game:
                         self.charge_sound.play()
 
             self.character.handle_keys()
-
-            self.character.draw_hp_bar(self.screen)
 
             collision_detected = False
             for enemy in self.enemy_manager.enemies:
