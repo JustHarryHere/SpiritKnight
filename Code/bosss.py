@@ -97,7 +97,7 @@ except EOFError:
 
 
 # Load weakened attack GIF
-weak_attack_gif_path = 'C:/Users/Administrator/Documents/GitHub/SpiritKnight/Sprites/jumpphase2.gif'  # Đường dẫn tới hoạt ảnh tấn công yếu
+weak_attack_gif_path = os.path.join(Sprites_folder, 'jumpphase2.gif')  # Đường dẫn tới hoạt ảnh tấn công yếu
 weak_attack_gif = Image.open(weak_attack_gif_path)
 weak_attack_frames = []
 try:
