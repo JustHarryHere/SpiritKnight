@@ -123,7 +123,7 @@ dash_frame_update_rate = 2
 dashing = False
 dash_cooldown = False
 last_dash_time = 0
-dash_speed = 7
+dash_speed = 10
 dash_cooldown_time = 1500
 
 
