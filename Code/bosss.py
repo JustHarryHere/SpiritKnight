@@ -15,6 +15,7 @@ Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
 Font_folder = os.path.join(script_dir, '..', 'Font')
 
+
 # Load character GIF
 character_gif_path = os.path.join(Sprites_folder, 'lil dude bigger.gif')
 character_gif = Image.open(character_gif_path)
@@ -289,6 +290,17 @@ getting_hit_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Ouch.wav'))
 dash_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav'))
 charge_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'loud-thunder-192165.wav'))
 
+boss_rect = boss_frames[0].get_rect(center=(width // 2, height // 2))
+# Giới hạn vùng di chuyển của boss
+boss_min_x = 0  # Biên trái màn hình
+boss_max_x = width - boss_rect.width  # Biên phải màn hình
+boss_min_y = 0  # Biên trên màn hình
+boss_max_y = height - boss_rect.height  # Biên dưới màn hình
+
+# Di chuyển boss về phía nhân vật (giới hạn vùng di chuyển trong màn hình)
+boss_rect.x = max(boss_min_x, min(boss_max_x, boss_rect.x + (char_rect.x - boss_rect.x) // 50))
+boss_rect.y = max(boss_min_y, min(boss_max_y, boss_rect.y + (char_rect.y - boss_rect.y) // 50))
+
 while True:
     current_time = pygame.time.get_ticks()
     screen.fill((0, 0, 0))
@@ -345,6 +357,10 @@ while True:
 
     # Boss nhảy tấn công
     if boss_attacking:
+        boss_rect.x += (char_rect.x - boss_rect.x) // 50
+        boss_rect.y += (char_rect.y - boss_rect.y) // 50
+        boss_rect.x = max(boss_min_x, min(boss_max_x, boss_rect.x + (char_rect.x - boss_rect.x) // 50))
+        boss_rect.y = max(boss_min_y, min(boss_max_y, boss_rect.y + (char_rect.y - boss_rect.y) // 50))
         if boss_remaining_hp > 250:
             # Xử lý hoạt ảnh nhảy
             boss_jump_frame_counter += 1
