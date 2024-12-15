@@ -296,6 +296,18 @@ class Skeleton(Enemy):
                     self.enemy_pos += direction * self.enemy_speed
                 self.rect.center = self.enemy_pos
 
+            # Định nghĩa vùng thu hẹp
+            min_x, max_x = 200, self.width - 100  
+            min_y, max_y = 100, self.height - 100  
+
+            # Giới hạn vị trí trong màn hình
+            self.rect.left = max(min_x, self.rect.left)
+            self.rect.right = min(max_x, self.rect.right)
+            self.rect.top = max(min_y, self.rect.top)
+            self.rect.bottom = min(max_y, self.rect.bottom)
+            # Cập nhật lại vị trí self.enemy_pos để đồng bộ
+            self.enemy_pos = Vector2(self.rect.center)
+
             if not self.arrow_active and not self.is_attacking and current_time - self.last_arrow_time > self.arrow_cooldown:
                 self.is_attacking = True
                 self.attack_timer = current_time
