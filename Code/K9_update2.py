@@ -434,8 +434,15 @@ class Witch(Enemy):
             if self.teleporting:
                 if current_time - self.teleport_start_time >= self.teleport_duration:
                     while True:
-                        new_x = random.randint(0, self.width - self.rect.width)
-                        new_y = random.randint(0, self.height - self.rect.height)
+                        # Định nghĩa giới hạn vùng dịch chuyển
+                        min_x, max_x = 100, self.width - 100
+                        min_y, max_y = 100, self.height - 100
+
+                        # Chọn vị trí ngẫu nhiên trong vùng giới hạn
+                        new_x = random.randint(min_x, max_x - self.rect.width)
+                        new_y = random.randint(min_y, max_y - self.rect.height)
+
+                        # Kiểm tra khoảng cách đủ xa với người chơi
                         if Vector2(new_x, new_y).distance_to(player_pos) > 650:
                             self.rect.x = new_x
                             self.rect.y = new_y
