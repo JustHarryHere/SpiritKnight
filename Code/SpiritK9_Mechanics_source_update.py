@@ -6,6 +6,20 @@ from pygame.math import Vector2
 import math
 import os
 from spawner import Spawner
+from bosss import spawn_boss
+from healthbar import HealthBar
+
+#Hehehehe
+pygame.init()
+
+width = 1280
+height = 720
+screen = pygame.display.set_mode((width, height))
+clock = pygame.time.Clock()
+
+max_hp = 100
+remaining_hp = 100
+health_bar = HealthBar(max_hp, remaining_hp, position=(0, 0))
 
 pygame.mixer.init()
 
@@ -13,67 +27,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
 
-
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
 pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
-
-
-# class LoadItem:
-#     def __init__(self, gif_name, enemy_rect):
-#         self.item_gif_rect = enemy_rect
-#         self.pick_up_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav'))
-#         self.picked_up = False
-#         self.frame_index = 0
-#         self.frame_counter = 0
-#         self.frame_update_rate = 5
-
-#         gif_paths = {
-#             'speed.gif': os.path.join(Sprites_folder, 'speed.gif'),
-#             'health.gif': os.path.join(Sprites_folder, 'potion.gif'),
-#             'damage.gif': os.path.join(Sprites_folder, 'damage.gif'),
-#             'shield.gif': os.path.join(Sprites_folder, 'Celestial_Opposition_item_HD.png')
-#         }
-
-#         gif_path = gif_paths.get(gif_name)
-#         if gif_path is None:
-#             raise ValueError(f"Unknown gif name: {gif_name}")
-
-#         self.frames = self.load_gif(gif_path)
-
-#     def load_gif(self, gif_path):
-#         frames = []
-#         gif = Image.open(gif_path)
-#         try:
-#             while True:
-#                 gif.seek(gif.tell())
-#                 frame = gif.copy().convert("RGBA")
-#                 frame = frame.resize((60, 60), Image.LANCZOS)
-#                 pygame_frame = pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode)
-#                 frames.append(pygame_frame)
-#                 gif.seek(gif.tell() + 1)
-#         except EOFError:
-#             pass
-#         return frames
-
-#     def check_pick_up(self, char_rect):
-#         keys = pygame.key.get_pressed()
-#         if keys[pygame.K_f] and not self.picked_up:
-#             if char_rect.colliderect(self.item_gif_rect):
-#                 self.picked_up = True
-#                 self.play()
-
-#     def draw(self, screen, char_rect):
-#         self.check_pick_up(char_rect)
-#         if not self.picked_up:
-#             screen.blit(self.frames[self.frame_index], self.item_gif_rect)
-#             self.frame_counter += 1
-#             if self.frame_counter >= self.frame_update_rate:
-#                 self.frame_counter = 0
-#                 self.frame_index = (self.frame_index + 1) % len(self.frames)
-
-#     def play(self):
-#         self.pick_up_sound.play()
 
 class Enemy:
     def __init__(self, frames, initial_pos, width, height, character, game):
@@ -113,7 +69,7 @@ class Enemy:
         ]
         item = random.choices([i[0] for i in items], weights=[i[1] for i in items], k=1)[0]
         if item is not None:
-            self.dropped_item = LoadItem(item, self.rect)
+            self.dropped_item = LoadItem(item, self.rect, self.character)
 
     def update(self, character_pos, attacking, charging, character):
         current_time = time.time()
@@ -129,7 +85,7 @@ class Enemy:
             distance_to_player = player_pos.distance_to(self.enemy_pos)
             direction = player_pos - self.enemy_pos
 
-            if distance_to_player < 100:
+            if distance_to_player < 50:
                 direction = direction.normalize() if direction.length() != 0 else Vector2(0, 0)
 
                 if attacking and not self.hit_recently:
@@ -177,7 +133,7 @@ class Enemy:
             self.dropped_item.draw(screen, self.character.character_rect)
 
 class LoadItem:
-    def __init__(self, gif_name, enemy_rect):
+    def __init__(self, gif_name, enemy_rect, character):
         self.item_gif_rect = enemy_rect
         self.pick_up_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Pop-_Minecraft-Sound_-Sound-Effect-for-editing.wav'))
         self.picked_up = False
@@ -185,13 +141,14 @@ class LoadItem:
         self.frame_counter = 0
         self.frame_update_rate = 5
         self.game = None  # This will be set when the item is added to the game
+        self.character = character
 
         gif_paths = {
             'speed.gif': os.path.join(Sprites_folder, 'wingedboot.gif'),
             'health.gif': os.path.join(Sprites_folder, 'Trans.gif'),
             'damage.gif': os.path.join(Sprites_folder, 'Heroine.gif'),
             'shield.gif': os.path.join(Sprites_folder, 'shield.gif'),
-            'cross.gif' : os.path.join(Sprites_folder, 'Mary on a.gif')
+            'cross.gif': os.path.join(Sprites_folder, 'Mary on a.gif')
         }
         gif_path = gif_paths.get(gif_name)
         if gif_path is None:
@@ -204,7 +161,6 @@ class LoadItem:
         gif = Image.open(gif_path)
         try:
             while True:
-                gif.seek(gif.tell())
                 frame = gif.copy().convert("RGBA")
                 frame = frame.resize((60, 60), Image.LANCZOS)
                 pygame_frame = pygame.image.fromstring(frame.tobytes(), frame.size, frame.mode)
@@ -217,11 +173,13 @@ class LoadItem:
     def check_pick_up(self, char_rect):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_f] and not self.picked_up:
+            current_time = pygame.time.get_ticks()
             if char_rect.colliderect(self.item_gif_rect):
                 self.picked_up = True
                 self.play()
                 if self.game:
                     self.game.remove_dropped_item(self)
+                self.character.activate_speed_boost(current_time)
 
     def draw(self, screen, char_rect):
         self.check_pick_up(char_rect)
@@ -235,6 +193,75 @@ class LoadItem:
     def play(self):
         self.pick_up_sound.play()
 
+class Goblin(Enemy):
+    def __init__(self, frames, attack_frames, initial_pos, width, height, character, game):
+        super().__init__(frames, initial_pos, width, height, character, game)
+        self.attack_frames = attack_frames  # Add attack frames
+        self.flipped_attack_frames = [pygame.transform.flip(frame, True, False) for frame in self.attack_frames]
+        self.is_attacking = False
+        self.attack_frame_index = 0
+        self.attack_frame_counter = 0
+        self.attack_range = 50  # Define the attack range
+        self.attack_damage = 1  # Damage dealt by the goblin
+        self.attack_delay = 1  # Delay between attacks in seconds
+        self.last_attack_time = time.time()
+
+    def goblin_special_attack(self, character, current_time):
+        if current_time - self.last_attack_time >= self.attack_delay:
+            self.last_attack_time = current_time
+            self.is_attacking = True  # Set attacking state
+            self.attack_frame_index = 0  # Reset attack frame index for animation
+
+    def update(self, character_pos, attacking, charging, character):
+        current_time = time.time()
+
+        # Call the parent class update method
+        super().update(character_pos, attacking, charging, character)
+
+        # Check if the goblin should attack
+        if self.rect.colliderect(character.hitbox) and not self.eliminated:
+            self.goblin_special_attack(character, current_time)
+        else:
+            self.is_attacking = False
+
+    def goblin_special_attack(self, character, current_time): 
+        if current_time - self.last_attack_time >= self.attack_delay: 
+            self.last_attack_time = current_time 
+            self.is_attacking = True 
+            self.attack_frame_index = 0 # Reset attack frame index for animation 
+            character.hp -= 5 # Reduce player's HP by 5 
+            # print(f"Goblin attacked! Player HP: {character.hp}")
+
+    def draw(self, screen):
+        if not self.eliminated:
+            if self.is_attacking:
+                self.attack_frame_counter += 1
+                if self.attack_frame_counter >= 5:  # Adjust the frame rate as needed
+                    self.attack_frame_counter = 0
+                    self.attack_frame_index = (self.attack_frame_index + 1) % len(self.attack_frames)
+                
+                if self.direction == "right":
+                    screen.blit(self.attack_frames[self.attack_frame_index], self.rect)  # Draw the attack frames
+                else:
+                    screen.blit(self.flipped_attack_frames[self.attack_frame_index], self.rect)  # Draw the flipped attack frames
+
+                # Reset attacking state if the attack animation completes
+                if self.attack_frame_index == len(self.attack_frames) - 1:
+                    self.is_attacking = False
+            else:
+                self.frame_counter += 1
+                if self.frame_counter >= 5:
+                    self.frame_counter = 0
+                    self.frame_index = (self.frame_index + 1) % len(self.frames)
+                if self.direction == "right":
+                    screen.blit(self.frames[self.frame_index], self.rect)
+                else:
+                    screen.blit(self.flipped_frames[self.frame_index], self.rect)
+
+            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+
+        if self.eliminated and self.dropped_item:
+            self.dropped_item.draw(screen, self.character.character_rect)
 
 class Skeleton(Enemy):
     def __init__(self, frames, attack_frames, initial_pos, width, height, character, game):
@@ -279,6 +306,18 @@ class Skeleton(Enemy):
                     self.enemy_pos += direction * self.enemy_speed
                 self.rect.center = self.enemy_pos
 
+            # Định nghĩa vùng thu hẹp
+            min_x, max_x = 200, self.width - 100  
+            min_y, max_y = 100, self.height - 100  
+
+            # Giới hạn vị trí trong màn hình
+            self.rect.left = max(min_x, self.rect.left)
+            self.rect.right = min(max_x, self.rect.right)
+            self.rect.top = max(min_y, self.rect.top)
+            self.rect.bottom = min(max_y, self.rect.bottom)
+            # Cập nhật lại vị trí self.enemy_pos để đồng bộ
+            self.enemy_pos = Vector2(self.rect.center)
+
             if not self.arrow_active and not self.is_attacking and current_time - self.last_arrow_time > self.arrow_cooldown:
                 self.is_attacking = True
                 self.attack_timer = current_time
@@ -303,8 +342,10 @@ class Skeleton(Enemy):
                 self.arrow_hitbox.center = self.arrow_rect.center
 
                 if character.character_rect.colliderect(self.arrow_hitbox):
-                    print("Character hit by arrow!")
+                    print("Character hit by arrow!")                    
+                    character.hp -= 10
                     self.arrow_active = False
+
 
                 if (self.arrow_rect.right < 0 or self.arrow_rect.left > self.width or
                     self.arrow_rect.bottom < 0 or self.arrow_rect.top > self.height):
@@ -392,6 +433,16 @@ class Witch(Enemy):
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
+        super().update(character_pos, attacking, charging, character)
+
+        # Apply poison damage 
+        if self.poison_active and self.rect.colliderect(character.character_rect): 
+            character.hp -= 2 # Reduce player's HP by 2 per second 
+            print(f"Player poisoned! Player HP: {character.hp}") # Check if poison duration is over 
+
+        if current_time - self.poison_start_time >= 1: 
+            self.poison_active = False
+
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
             self.drop_item()
@@ -405,8 +456,15 @@ class Witch(Enemy):
             if self.teleporting:
                 if current_time - self.teleport_start_time >= self.teleport_duration:
                     while True:
-                        new_x = random.randint(0, self.width - self.rect.width)
-                        new_y = random.randint(0, self.height - self.rect.height)
+                        # Định nghĩa giới hạn vùng dịch chuyển
+                        min_x, max_x = 100, self.width - 100
+                        min_y, max_y = 100, self.height - 100
+
+                        # Chọn vị trí ngẫu nhiên trong vùng giới hạn
+                        new_x = random.randint(min_x, max_x - self.rect.width)
+                        new_y = random.randint(min_y, max_y - self.rect.height)
+
+                        # Kiểm tra khoảng cách đủ xa với người chơi
                         if Vector2(new_x, new_y).distance_to(player_pos) > 650:
                             self.rect.x = new_x
                             self.rect.y = new_y
@@ -551,7 +609,9 @@ class EnemyManager:
             self.enemy_pos = self.spawner.spawn_enemy(character_pos)
             enemy = None
             if enemy_name == "Goblin":
-                enemy = Enemy(self.enemy_frames["goblin"], self.enemy_pos, self.width, self.height, character, game)
+                goblin_frames = self.enemy_frames["goblin"]
+                goblin_attack_frames = self.enemy_frames["goblin_attack"]
+                enemy = Goblin(goblin_frames, goblin_attack_frames, self.enemy_pos, self.width, self.height, character, game)
             elif enemy_name == "Witch":
                 enemy = Witch(
                     self.enemy_frames["witch"],
@@ -586,7 +646,6 @@ class EnemyManager:
     def next_level(self):
         self.enemies = []
         self.dropped_items = []
-
 
 class Cross:
     def __init__(self, width, height):
@@ -671,9 +730,15 @@ class Character:
         self.width = width
         self.height = height
         self.enemy_manager = enemy_manager
+        self.hp = 100
+        self.speed_boost_duration = 5000
+        self.speed_boost_start_time = 0
+        self.speed_boost_active = False
         self.load_assets()
         self.slash()
         self.reset_states()
+
+
 
     def slash(self):
         self.slash_right = pygame.image.load(os.path.join(Sprites_folder, 'wind burst.png'))
@@ -778,7 +843,7 @@ class Character:
         self.attack_frame_counter = 0
         self.charge_frame_counter = 0
         self.dash_frame_counter = 0
-        self.frame_update_rate = 5
+        self.frame_update_rate = 10
         self.attack_frame_update_rate = 2
         self.charge_frame_update_rate = 4
         self.dash_frame_update_rate = 2
@@ -786,6 +851,23 @@ class Character:
         self.dash_speed = 10
         self.character_direction = None
         self.collision = False
+        self.movement_speed = 5
+
+    def activate_speed_boost(self, current_time):
+        self.speed_boost_active = True
+        self.speed_boost_start_time = current_time
+        self.movement_speed = 20  # Increase movement speed
+        print(f"Speed boost activated at {current_time}.")
+
+    def handle_speed_boost(self, current_time):
+        if self.speed_boost_active:
+            time_left = current_time - self.speed_boost_start_time
+            print(time_left)
+            # print(f"current_time = {current_time}, speed_boost_start_time = {self.speed_boost_start_time}")
+            if current_time - self.speed_boost_start_time >= self.speed_boost_duration:
+                self.movement_speed = 5  # Reset to normal state including movement speed
+                self.speed_boost_active = False
+                print("Speed boost ended.")
 
     def handle_keys(self):
         keys = pygame.key.get_pressed()
@@ -796,19 +878,19 @@ class Character:
 
         if keys[pygame.K_a]:
             self.character_direction = 'Left'
-            self.character_rect.x = max(min_x, self.character_rect.x - 5)
+            self.character_rect.x = max(min_x, self.character_rect.x - self.movement_speed)
             self.running = True
             self.flipped = False
         if keys[pygame.K_d]:
             self.character_direction = 'Right'
-            self.character_rect.x = min(max_x, self.character_rect.x + 5)
+            self.character_rect.x = min(max_x, self.character_rect.x + self.movement_speed)
             self.running = True
             self.flipped = True
         if keys[pygame.K_w]:
-            self.character_rect.y = max(top_border, self.character_rect.y - 5)
+            self.character_rect.y = max(top_border, self.character_rect.y - self.movement_speed)
             self.running = True
         if keys[pygame.K_s]:
-            self.character_rect.y = min(bottom_border, self.character_rect.y + 5)
+            self.character_rect.y = min(bottom_border, self.character_rect.y + self.movement_speed)
             self.running = True
 
         if self.dashing:
@@ -936,7 +1018,7 @@ class Game:
 
         self.enemy_manager = EnemyManager(self.enemy_frames, self.width, self.height, 100, 2, self.enemy_list, self.clock)
         self.character = Character(self.width, self.height, self.enemy_manager)
-        self.loaditem = LoadItem
+        # self.loaditem = LoadItem
 
         self.attack_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'sword-sound-260274.wav'))
         self.charge_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'loud-thunder-192165.wav'))
@@ -947,8 +1029,8 @@ class Game:
         self.stairway = pygame.image.load(os.path.join(Sprites_folder, 'Stairway.png'))
         self.stairway = pygame.transform.scale(self.stairway, (int(self.stairway.get_width() * self.scale_factor), int(self.stairway.get_height() * self.scale_factor)))
         self.stairway_rect = self.stairway.get_rect(center=(self.width // 2, self.height // 2))
-        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'box.png'))
-        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.5), int(self.obstacle.get_height() * 0.5)))
+        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'tree.png'))
+        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.3), int(self.obstacle.get_height() * 0.3)))
         self.rock = pygame.image.load(os.path.join(Sprites_folder, 'rock.png'))
         self.rock = pygame.transform.scale(self.rock, (int(self.rock.get_width() * self.scale_factor), int(self.rock.get_height() * self.scale_factor)))
 
@@ -994,6 +1076,18 @@ class Game:
                 "status": False
             }
         }
+        self.level = 0
+
+    def check_and_increase_level(self):
+        if not self.enemy_manager.enemies and self.stair_drawn:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_r]:
+                self.level += 1
+                if self.level == 3:
+                    spawn_boss()
+                else:
+                    self.move_next_level()
+                    self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character, self)
 
     def get_time(self):
         return self.clock.get_time()
@@ -1032,11 +1126,14 @@ class Game:
         self.enemy_manager.dropped_items.clear()
         self.stair_drawn = False
         self.obstacle_list.clear()
-        for _ in range(random.randint(5, 8)):
-            obstacle_type = random.choice(["tree"])
+        for _ in range(random.randint(5, 10)):
+            obstacle_type = random.choice(["tree", "rock"])
             if obstacle_type == "tree":
                 obstacle_sprite = self.obstacle
                 obstacle_rect = self.obstacle.get_rect()
+            else:
+                obstacle_sprite = self.rock
+                obstacle_rect = self.rock.get_rect()
 
             obstacle_rect.centerx = random.randint(100, self.width - 100)
             obstacle_rect.centery = random.randint(100, self.height - 100)
@@ -1049,11 +1146,13 @@ class Game:
     def load_enemy_frames(self):
         self.enemy_frames = {}
         self.enemy_frames["goblin"] = self.load_frames(os.path.join(Sprites_folder, 'Goblin.gif'))
+        self.enemy_frames["goblin_attack"] = self.load_frames(os.path.join(Sprites_folder, 'GoblinAtk.gif'))  # Load attack frames
         self.enemy_frames["witch"] = self.load_frames(os.path.join(Sprites_folder, 'black Wizard.gif'))
         self.enemy_frames["witch_teleport"] = self.load_frames(os.path.join(Sprites_folder, 'black Wizard teleport v.gif'))
         self.enemy_frames["skeleton"] = self.load_frames(os.path.join(Sprites_folder, 'skele.gif'))
         self.enemy_frames["skeleton_attack"] = self.load_frames(os.path.join(Sprites_folder, 'Skeleshoot.gif'))
         self.enemy_frames["poison"] = self.load_frames(os.path.join(Sprites_folder, 'Poisoncloud.gif'))
+
 
     def load_frames(self, gif_path):
         gif = Image.open(gif_path)
@@ -1085,11 +1184,17 @@ class Game:
         self.enemy_manager.spawn_multiple_enemies(Vector2(self.width // 4, self.height // 4), self.character, self)
 
         while True:
-            self.screen.fill((0, 0, 0))
             self.screen.blit(self.bg, (0, 0))
             self.update_game_objs()
             self.check_enemy_list()
             self.draw()
+            current_time = pygame.time.get_ticks()  # Get the current time
+
+            health_bar.update(remaining_hp)
+            health_bar.draw(screen)
+
+            for item in self.dropped_items:
+                item.draw(self.screen, self.character.character_rect, current_time, self.character)
 
             if self.stair_drawn and self.character.character_rect.colliderect(self.stairway_rect):
                 keys = pygame.key.get_pressed()
@@ -1122,6 +1227,7 @@ class Game:
                         self.charge_sound.play()
 
             self.character.handle_keys()
+            self.character.handle_speed_boost(current_time)  # Handle speed boost in the character
 
             collision_detected = False
             for enemy in self.enemy_manager.enemies:
@@ -1171,26 +1277,16 @@ class Game:
                 if dash_elapsed_time >= self.character.dash_cooldown_time:
                     self.character.dash_cooldown = False
 
-            self.screen.blit(self.Hp_bar, self.Hp_bar_rect.topleft)
-            self.screen.blit(self.Inv, self.Inv_rect.topleft)
+            # Draw additional UI elements
             self.screen.blit(self.frame_ui, self.frame_ui_rect)
             self.screen.blit(self.frame_ui2, self.frame_ui2_rect)
-            self.cross.draw(self.screen, self.slot_inventory)
 
-            # Draw dropped itemsd
-            for item in self.enemy_manager.dropped_items:
-                item.draw(self.screen, self.character.character_rect)
+            # Check and increase level if all enemies are eliminated
+            self.check_and_increase_level()
 
             pygame.display.update()
             self.clock.tick(60)
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
-
-
-
-
-
-
-
+     game = Game() 
+     game.run()
