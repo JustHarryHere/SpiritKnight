@@ -211,6 +211,7 @@ class Goblin(Enemy):
             self.last_attack_time = current_time
             self.is_attacking = True  # Set attacking state
             self.attack_frame_index = 0  # Reset attack frame index for animation
+            character.take_damage(self.attack_damage)
 
     def update(self, character_pos, attacking, charging, character):
         current_time = time.time()
@@ -737,6 +738,7 @@ class Character:
         self.load_assets()
         self.slash()
         self.reset_states()
+        self.alive = True  # Trạng thái nhân vật
 
 
 
@@ -751,6 +753,16 @@ class Character:
         self.slash_start_x = 0
         self.max_slash_distance = 300  # Maximum distance the slash can travel
         self.slash_hitted = False
+
+    def take_damage(self, damage):
+        """Giảm máu của nhân vật khi bị tấn công."""
+        if self.alive:
+            self.hp -= damage
+            print(f"Character HP: {self.hp}")
+            if self.hp <= 0:
+                self.hp = 0
+                self.alive = False
+                print("Game Over! Character died.")
 
     def load_assets(self):
         self.load_gif()
@@ -1189,9 +1201,28 @@ class Game:
             self.check_enemy_list()
             self.draw()
             current_time = pygame.time.get_ticks()  # Get the current time
+            current_hp = max_hp
+            self.health_bar = HealthBar(max_hp, current_hp, position=(0, 0), scale_factor=0.5)
 
-            health_bar.update(remaining_hp)
-            health_bar.draw(screen)
+            self.health_bar.update(self.character.hp)
+            self.health_bar.draw(self.screen)
+
+            # Kiểm tra nếu nhân vật đã chết
+            if not self.character.alive:
+                print("Game Over!")
+                pygame.quit()
+                sys.exit()
+
+            for enemy in self.enemy_manager.enemies:
+                if self.character.hitbox.colliderect(enemy.rect):
+                    # Nếu quái Goblin, gọi logic tấn công của nó
+                    if isinstance(enemy, Goblin):
+                        enemy.goblin_special_attack(self.character, time.time())
+                    elif isinstance(enemy, Skeleton):
+                        enemy.skeleton_special_attack(self.character, time.time())
+                    elif isinstance(enemy, Witch):
+                        enemy.cast_poison(self.character)
+                    break  # Chỉ xử lý 1 lần nếu va chạm
 
             for item in self.dropped_items:
                 item.draw(self.screen, self.character.character_rect, current_time, self.character)
