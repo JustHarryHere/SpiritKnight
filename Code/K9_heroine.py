@@ -29,7 +29,7 @@ Music_folder = os.path.join(script_dir, '..', 'Music')
 
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
-#pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
 class Enemy:
     def __init__(self, frames, initial_pos, width, height, character, game):
@@ -52,20 +52,29 @@ class Enemy:
         self.character = character
         self.dropped_item = None
 
-    def update_hit_count(self, current_time):
+    def update_hit_count(self, current_time, dame):
         if current_time - self.last_hit_time > self.skill_hit_delay:
-            self.hit_count += 1
+            self.hit_count += dame
             self.last_hit_time = current_time
             print(f"Hit count updated at {current_time}. Total hits: {self.hit_count}")
 
     def drop_item(self):
+        # items = [
+        #     ('speed.gif', 0.3),
+        #     ('health.gif', 0.3),
+        #     ('damage.gif', 0.2),
+        #     ('shield.gif', 0.1),
+        #     ('cross.gif', 0.1),
+        #     (None, 0.1)
+        # ]
+
         items = [
-            ('speed.gif', 0.3),
-            ('health.gif', 0.3),
-            ('damage.gif', 0.2),
-            ('shield.gif', 0.1),
-            ('cross.gif', 0.1),
-            (None, 0.1)
+            ('speed.gif', 0.0),
+            ('health.gif', 0.0),
+            ('damage.gif', 1.0),
+            ('shield.gif', 0.0),
+            ('cross.gif', 0.0),
+            (None, 0.0)
         ]
         item = random.choices([i[0] for i in items], weights=[i[1] for i in items], k=1)[0]
         if item is not None:
@@ -73,7 +82,6 @@ class Enemy:
 
     def update(self, character_pos, attacking, charging, character):
         current_time = time.time()
-
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
             self.drop_item()
@@ -90,14 +98,14 @@ class Enemy:
 
                 if attacking and not self.hit_recently:
                     if current_time - self.last_hit_time >= self.hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += character.dame
                         print(f"Hit count increased: {self.hit_count}")  # Debug statement
                         self.hit_recently = True
                         self.last_hit_time = current_time
 
                 if (charging or character.slash_hitted) and not self.skill_hit_recently:
                     if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += character.dame
                         print(f"Skill hit count increased: {self.hit_count}")  # Debug statement
                         self.skill_hit_recently = True
                         self.last_skill_hit_time = current_time
@@ -128,7 +136,7 @@ class Enemy:
                 screen.blit(self.flipped_frames[self.frame_index], self.rect)
 
             pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
-
+ 
         if self.eliminated and self.dropped_item:
             self.dropped_item.draw(screen, self.character.character_rect)
 
@@ -156,6 +164,18 @@ class LoadItem:
 
         self.frames = self.load_gif(gif_path)
 
+        # Function mappings
+        self.function_mappings = {
+            'speed.gif': self.character.activate_speed_boost,
+            'health.gif': self.character.activate_health_boost,
+            'damage.gif': self.character.activate_damage_boost,
+            'shield.gif': self.character.activate_shield,
+            'cross.gif': self.character.activate_cross
+        }
+        self.selected_function = self.function_mappings.get(gif_name)
+        if self.selected_function is None:
+            raise ValueError(f"Unknown function for gif name: {gif_name}")
+
     def load_gif(self, gif_path):
         frames = []
         gif = Image.open(gif_path)
@@ -179,7 +199,8 @@ class LoadItem:
                 self.play()
                 if self.game:
                     self.game.remove_dropped_item(self)
-                self.character.activate_speed_boost(current_time)
+                # Call the function based on gif_name
+                self.selected_function(current_time)
 
     def draw(self, screen, char_rect):
         self.check_pick_up(char_rect)
@@ -430,23 +451,20 @@ class Witch(Enemy):
         self.show_poison_aoe = False
         self.poison_aoe_timer = 0
         self.poison_aoe_duration = 8000
+        self.poison_active = False
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
         super().update(character_pos, attacking, charging, character)
 
-        # Apply poison damage 
-        if self.poison_active and self.rect.colliderect(character.character_rect): 
-            character.hp -= 2 # Reduce player's HP by 2 per second 
-            print(f"Player poisoned! Player HP: {character.hp}") # Check if poison duration is over 
+        # Apply poison damage
+        if self.poison_active and self.rect.colliderect(character.character_rect):
+            character.hp -= 2  # Reduce player's HP by 2 per second
+            print(f"Player poisoned! Player HP: {character.hp}")
+            if current_time - self.poison_start_time >= 1000:
+                self.poison_active = False
 
-        if current_time - self.poison_start_time >= 1: 
-            self.poison_active = False
-
-        if self.hit_count >= 3 and not self.eliminated:
-            self.eliminated = True
-            self.drop_item()
-
+        # Teleporting logic
         if not self.eliminated:
             player_pos = Vector2(character_pos)
             self.enemy_pos = Vector2(self.rect.center)
@@ -456,15 +474,10 @@ class Witch(Enemy):
             if self.teleporting:
                 if current_time - self.teleport_start_time >= self.teleport_duration:
                     while True:
-                        # Định nghĩa giới hạn vùng dịch chuyển
                         min_x, max_x = 100, self.width - 100
                         min_y, max_y = 100, self.height - 100
-
-                        # Chọn vị trí ngẫu nhiên trong vùng giới hạn
                         new_x = random.randint(min_x, max_x - self.rect.width)
                         new_y = random.randint(min_y, max_y - self.rect.height)
-
-                        # Kiểm tra khoảng cách đủ xa với người chơi
                         if Vector2(new_x, new_y).distance_to(player_pos) > 650:
                             self.rect.x = new_x
                             self.rect.y = new_y
@@ -527,28 +540,6 @@ class Witch(Enemy):
                 if self.poison_aoe_timer >= self.poison_aoe_duration:
                     self.show_poison_aoe = False
 
-            if distance_to_player < 100:
-                if attacking and not self.hit_recently:
-                    if current_time - self.last_hit_time >= self.hit_delay:
-                        self.hit_count += 1
-                        self.hit_recently = True
-                        self.last_hit_time = current_time
-
-                if charging and not self.skill_hit_recently:
-                    if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
-                        self.skill_hit_recently = True
-                        self.last_skill_hit_time = current_time
-                        
-                if character.slash_hitted and not self.skill_hit_recently:  # Add slash hit detection
-                    if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
-                        self.skill_hit_recently = True
-                        self.last_skill_hit_time = current_time
-            else:
-                self.hit_recently = False
-                self.skill_hit_recently = False
-
             if direction.x < 0:
                 self.direction = "right"
             else:
@@ -605,6 +596,8 @@ class EnemyManager:
     def spawn_multiple_enemies(self, character_pos, character, game):
         sample_size = min(self.num_enemies, len(self.enemy_list))
         sample_enemies = random.sample(self.enemy_list, sample_size)
+        current_time = pygame.time.get_ticks()
+        # damage_boost = character.damage_boost_active(current_time)
         for enemy_name in sample_enemies:
             self.enemy_pos = self.spawner.spawn_enemy(character_pos)
             enemy = None
@@ -625,6 +618,10 @@ class EnemyManager:
                 self.enemies.append(enemy)
                 print(f"Spawned {enemy_name} at {self.enemy_pos}")
         self.active_enemies = self.enemies
+
+
+    def get_enemy_by_id(self, enemy_id): 
+        return self.enemies.get(enemy_id)
 
     def update(self, character_pos, attacking, charging, character):
         for enemy in self.active_enemies:
@@ -732,13 +729,13 @@ class Character:
         self.enemy_manager = enemy_manager
         self.hp = 100
         self.speed_boost_duration = 5000
+        self.damage_boost_duration = 5000
+        self.damage_boost_active = False
         self.speed_boost_start_time = 0
         self.speed_boost_active = False
         self.load_assets()
         self.slash()
         self.reset_states()
-
-
 
     def slash(self):
         self.slash_right = pygame.image.load(os.path.join(Sprites_folder, 'wind burst.png'))
@@ -852,6 +849,32 @@ class Character:
         self.character_direction = None
         self.collision = False
         self.movement_speed = 5
+        self.dame = 1
+        
+    def activate_health_boost(self, current_time): 
+        print("health activated")
+    
+    def activate_damage_boost(self, current_time): 
+        self.damage_boost_active = True 
+        self.damage_boost_start_time = current_time 
+        self.dame = 1.5
+        print(f"Damage boost activated at {current_time}.")
+        
+    def handlle_damage_boost(self, current_time): 
+        if self.damage_boost_active:
+            time_left = current_time - self.damage_boost_start_time
+            # print(time_left)
+
+            if current_time - self.damage_boost_start_time >= self.damage_boost_duration:
+                self.dame = 1
+                self.damage_boost_active = False
+                print("Damage boost ended.")
+
+    def activate_shield(self, current_time): 
+        print("shield activated")
+        
+    def activate_cross(self, current_time): 
+        print("cross activated")
 
     def activate_speed_boost(self, current_time):
         self.speed_boost_active = True
@@ -965,7 +988,7 @@ class Character:
                     if self.slash_rect.colliderect(enemy.rect):
                         self.slash_hitted = True
                         current_time = time.time()
-                        enemy.update_hit_count(current_time)
+                        enemy.update_hit_count(current_time, self.dame)
 
             self.slash_hitted = False
 
@@ -1010,7 +1033,7 @@ class Game:
         self.height = 720
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
-        pygame.mouse.set_visible(True)
+        pygame.mouse.set_visible(False)
         self.dropped_items = []  # List to hold dropped items
 
         self.load_enemy_frames()
@@ -1228,6 +1251,7 @@ class Game:
 
             self.character.handle_keys()
             self.character.handle_speed_boost(current_time)  # Handle speed boost in the character
+            self.character.handlle_damage_boost(current_time)
 
             collision_detected = False
             for enemy in self.enemy_manager.enemies:
