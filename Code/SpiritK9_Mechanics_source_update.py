@@ -1010,7 +1010,7 @@ class Game:
         self.height = 720
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
-        pygame.mouse.set_visible(False)
+        pygame.mouse.set_visible(True)
         self.dropped_items = []  # List to hold dropped items
 
         self.load_enemy_frames()
