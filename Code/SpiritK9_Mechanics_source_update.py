@@ -26,6 +26,7 @@ pygame.mixer.init()
 script_dir = os.path.dirname(os.path.abspath(__file__))
 Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
+Font_folder = os.path.join(script_dir, '..', 'Font')
 
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
@@ -757,7 +758,7 @@ class Character:
         self.slash()
         self.reset_states()
         self.alive = True  # Trạng thái nhân vật
-
+        self.game_over = False  # Trạng thái kết thúc game
 
 
     def slash(self):
@@ -783,8 +784,9 @@ class Character:
             if self.hp <= 0:
                 self.hp = 0
                 self.alive = False
+                self.game_over = True  # Kích hoạt trạng thái kết thúc
                 print("Game Over! Character died.")
-
+                
     def load_assets(self):
         self.load_gif()
         self.load_attack_frames()
@@ -918,7 +920,7 @@ class Character:
     def activate_speed_boost(self, current_time):
         self.speed_boost_active = True
         self.speed_boost_start_time = current_time
-        self.movement_speed = 20  # Increase movement speed
+        self.movement_speed = 10  # Increase movement speed
         print(f"Speed boost activated at {current_time}.")
 
     def handle_speed_boost(self, current_time):
@@ -1146,6 +1148,16 @@ class Game:
             if keys[pygame.K_r]:
                 self.level += 1
                 if self.level == 3:
+                    # Hiển thị thông báo
+                    font = pygame.font.Font(os.path.join(Font_folder, 'properhitboxglobal.ttf'), 30)
+                    restore_text = font.render("YOUR HEALTH WILL BE RESTORED", True, (255, 255, 255))
+                    restore_text_black = font.render("YOUR HEALTH WILL BE RESTORED", True, (0, 0, 0))
+                    text_rect = restore_text.get_rect(center = (width//2, height//2 - 200))
+                    text_black_rect = restore_text_black.get_rect(center = (width//2, height//2 - 200))
+                    self.screen.blit(restore_text_black, text_black_rect.move(5,5))
+                    self.screen.blit(restore_text, text_rect)
+                    pygame.display.update()
+                    pygame.time.delay(2000)  # Hiển thị thông báo trong 2 giây
                     spawn_boss()
                 else:
                     self.move_next_level()
@@ -1256,11 +1268,22 @@ class Game:
 
             self.health_bar.update(self.character.hp)
             self.health_bar.draw(self.screen)
-            # Kiểm tra nếu nhân vật đã chết
-            if not self.character.alive:
-                print("Game Over!")
-                pygame.quit()
-                sys.exit()
+            
+
+            if self.character.game_over:
+                font_die = pygame.font.Font(os.path.join(Font_folder, 'Pixelmax-Regular.otf'), 100)
+                text_die_black = font_die.render(f"GAME OVER!", True, (0, 0, 0))  # Màu đen
+                text_die_rect = text_die_black.get_rect(center = (width//2, height//2 - 200))
+                text_die_white = font_die.render(f"GAME OVER!", True, (255, 255, 255))  # Màu trắng
+                screen.blit(text_die_black, text_die_rect.move(10,10))
+                screen.blit(text_die_white, text_die_rect)
+                while self.character.game_over:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                    # Hiển thị thông báo game over tại đây
+                    pygame.display.flip()
 
             for item in self.dropped_items:
                 item.draw(self.screen, self.character.character_rect, current_time, self.character)
