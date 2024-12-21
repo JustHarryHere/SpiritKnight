@@ -28,8 +28,8 @@ Sprites_folder = os.path.join(script_dir, '..', 'Sprites')
 Music_folder = os.path.join(script_dir, '..', 'Music')
 
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
-pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
-pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+#pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
+#pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
 class Enemy:
     def __init__(self, frames, initial_pos, width, height, character, game):

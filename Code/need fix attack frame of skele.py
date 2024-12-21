@@ -156,18 +156,6 @@ class LoadItem:
 
         self.frames = self.load_gif(gif_path)
 
-        # Function mappings
-        self.function_mappings = {
-            'speed.gif': self.character.activate_speed_boost,
-            'health.gif': self.character.activate_health_boost,
-            'damage.gif': self.character.activate_damage_boost,
-            'shield.gif': self.character.activate_shield,
-            'cross.gif': self.character.activate_cross
-        }
-        self.selected_function = self.function_mappings.get(gif_name)
-        if self.selected_function is None:
-            raise ValueError(f"Unknown function for gif name: {gif_name}")
-
     def load_gif(self, gif_path):
         frames = []
         gif = Image.open(gif_path)
@@ -191,8 +179,15 @@ class LoadItem:
                 self.play()
                 if self.game:
                     self.game.remove_dropped_item(self)
-                # Call the function based on gif_name
-                self.selected_function(current_time)
+                self.character.activate_speed_boost(current_time)
+
+                # Hồi máu tùy vào loại vật phẩm
+                if self.frames == self.load_gif(os.path.join(Sprites_folder, 'Trans.gif')):  # health.gif
+                    self.character.hp = min(self.character.hp + 20, self.character.max_hp)
+                    print("Nhặt health.gif: Hồi 20 máu")
+                elif self.frames == self.load_gif(os.path.join(Sprites_folder, 'Mary on a.gif')):  # cross.gif
+                    self.character.hp = self.character.max_hp
+                    print("Nhặt cross.gif: Hồi đầy máu")
 
     def draw(self, screen, char_rect):
         self.check_pick_up(char_rect)
@@ -289,14 +284,14 @@ class Skeleton(Enemy):
         self.arrow_speed = 15
         self.arrow_active = False
         self.last_arrow_time = 0
-        self.arrow_cooldown = 5  # Adjusted cooldown duration
+        self.arrow_cooldown = 2  # Adjusted cooldown duration
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
         self.attack_timer = 0
-        self.attack_duration = 5.0
+        self.attack_duration = 1.0
         self.attack_frame_rate = 0.2
-        self.attack_damage = 1
+        self.attack_damage = 0.000001
 
     def skeleton_special_attack(self, character, current_time):
         self.last_attack_time = current_time
@@ -447,30 +442,21 @@ class Witch(Enemy):
         self.show_poison_aoe = False
         self.poison_aoe_timer = 0
         self.poison_aoe_duration = 8000
-        self.last_poison_time = 0  # Track the last time damage was applied
-
-    def Witch_special_attack(self, character):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_poison_time >= 1000:  # Check if 1 second has passed
-            character.take_damage(2)  # Apply damage of 2 HP
-            self.last_poison_time = current_time  # Update last poison time
-            print(f"Player poisoned! Player HP: {character.hp}")
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
-        
-        # super().update(character_pos, attacking, charging, character)
+        super().update(character_pos, attacking, charging, character)
 
-        # Apply poison damage if player is within poison circle
-        poison_center = self.poison_aoe_rect.center
-        character_center = character.character_rect.center
-        distance = math.hypot(character_center[0] - poison_center[0], character_center[1] - poison_center[1])
-        if self.show_poison_aoe and distance <= self.warning_circle_radius:
-            self.Witch_special_attack(character)
+        # Apply poison damage 
+        if self.poison_active and self.rect.colliderect(character.character_rect): 
+            character.hp -= 2 # Reduce player's HP by 2 per second 
+            print(f"Player poisoned! Player HP: {character.hp}") # Check if poison duration is over 
+
+        if current_time - self.poison_start_time >= 1: 
+            self.poison_active = False
 
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
-            #self.dropped_item = LoadItem(os.path.join(Sprites_folder, 'speed.gif'), self.rect)
             self.drop_item()
 
         if not self.eliminated:
@@ -479,12 +465,18 @@ class Witch(Enemy):
             distance_to_player = player_pos.distance_to(self.enemy_pos)
             direction = player_pos - self.enemy_pos
 
-            # Teleportation logic
             if self.teleporting:
                 if current_time - self.teleport_start_time >= self.teleport_duration:
                     while True:
-                        new_x = random.randint(0, self.width - self.rect.width)
-                        new_y = random.randint(0, self.height - self.rect.height)
+                        # Định nghĩa giới hạn vùng dịch chuyển
+                        min_x, max_x = 100, self.width - 100
+                        min_y, max_y = 100, self.height - 100
+
+                        # Chọn vị trí ngẫu nhiên trong vùng giới hạn
+                        new_x = random.randint(min_x, max_x - self.rect.width)
+                        new_y = random.randint(min_y, max_y - self.rect.height)
+
+                        # Kiểm tra khoảng cách đủ xa với người chơi
                         if Vector2(new_x, new_y).distance_to(player_pos) > 650:
                             self.rect.x = new_x
                             self.rect.y = new_y
@@ -500,7 +492,6 @@ class Witch(Enemy):
                     self.teleporting = True
                     self.teleport_start_time = current_time
 
-            # Warning circle management
             self.warning_circle_timer += self.clock.get_time()
             if self.warning_circle_timer >= self.warning_circle_interval:
                 self.warning_circle_timer = 0
@@ -548,7 +539,6 @@ class Witch(Enemy):
                 if self.poison_aoe_timer >= self.poison_aoe_duration:
                     self.show_poison_aoe = False
 
-            # Hit detection
             if distance_to_player < 100:
                 if attacking and not self.hit_recently:
                     if current_time - self.last_hit_time >= self.hit_delay:
@@ -557,6 +547,12 @@ class Witch(Enemy):
                         self.last_hit_time = current_time
 
                 if charging and not self.skill_hit_recently:
+                    if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
+                        self.hit_count += 1
+                        self.skill_hit_recently = True
+                        self.last_skill_hit_time = current_time
+                        
+                if character.slash_hitted and not self.skill_hit_recently:  # Add slash hit detection
                     if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
                         self.hit_count += 1
                         self.skill_hit_recently = True
@@ -879,31 +875,6 @@ class Character:
         self.character_direction = None
         self.collision = False
         self.movement_speed = 5
-
-    def activate_health_boost(self, current_time): 
-        print("health activated")
-    
-    def activate_damage_boost(self, current_time): 
-        self.damage_boost_active = True 
-        self.damage_boost_start_time = current_time 
-        self.dame = 1.5
-        print(f"Damage boost activated at {current_time}.")
-        
-    def handlle_damage_boost(self, current_time): 
-        if self.damage_boost_active:
-            time_left = current_time - self.damage_boost_start_time
-            # print(time_left)
-
-            if current_time - self.damage_boost_start_time >= self.damage_boost_duration:
-                self.dame = 1
-                self.damage_boost_active = False
-                print("Damage boost ended.")
-
-    def activate_shield(self, current_time): 
-        print("shield activated")
-        
-    def activate_cross(self, current_time): 
-        print("cross activated")
 
     def activate_speed_boost(self, current_time):
         self.speed_boost_active = True
@@ -1251,6 +1222,19 @@ class Game:
                 print("Game Over!")
                 pygame.quit()
                 sys.exit()
+
+            for enemy in self.enemy_manager.enemies:
+                if isinstance(enemy, Goblin):
+                    if self.character.hitbox.colliderect(enemy.rect):
+                        enemy.goblin_special_attack(self.character, time.time())
+                elif isinstance(enemy, Skeleton):
+                    if enemy.arrow_active and self.character.hitbox.colliderect(enemy.arrow_hitbox):
+                        enemy.skeleton_special_attack(self.character, time.time())
+                elif isinstance(enemy, Witch):
+                    for poison in enemy.poisons:
+                        if self.character.hitbox.colliderect(poison.rect):
+                            enemy.cast_poison(self.character)
+                            break  # Only process one collision per frame
 
             for item in self.dropped_items:
                 item.draw(self.screen, self.character.character_rect, current_time, self.character)
