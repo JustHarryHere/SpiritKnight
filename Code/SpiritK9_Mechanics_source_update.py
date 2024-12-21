@@ -60,12 +60,12 @@ class Enemy:
 
     def drop_item(self):
         items = [
-            ('speed.gif', 0.3),
-            ('health.gif', 0.3),
-            ('damage.gif', 0.2),
+            ('speed.gif', 0.1),
+            ('health.gif', 0.25),
+            ('damage.gif', 0.1),
             ('shield.gif', 0.1),
-            ('cross.gif', 0.1),
-            (None, 0.1)
+            ('cross.gif', 0.05),
+            (None, 0.4)
         ]
         item = random.choices([i[0] for i in items], weights=[i[1] for i in items], k=1)[0]
         if item is not None:
@@ -289,12 +289,12 @@ class Skeleton(Enemy):
         self.arrow_speed = 15
         self.arrow_active = False
         self.last_arrow_time = 0
-        self.arrow_cooldown = 5  # Adjusted cooldown duration
+        self.arrow_cooldown = 2  # Adjusted cooldown duration
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
         self.attack_timer = 0
-        self.attack_duration = 5.0
+        self.attack_duration = 1.0
         self.attack_frame_rate = 0.2
         self.attack_damage = 1
 
@@ -309,7 +309,7 @@ class Skeleton(Enemy):
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
             self.drop_item()
-            print(f"Skeleton eliminated. Dropping item: {self.dropped_item}")  # Debug statement
+            #print(f"Skeleton eliminated. Dropping item: {self.dropped_item}")  # Debug statement
 
         if not self.eliminated:
             player_pos = Vector2(character_pos)
@@ -345,7 +345,7 @@ class Skeleton(Enemy):
                     self.is_attacking = False
                     self.arrow_active = True
                     self.last_arrow_time = self.current_time
-                    print(f"Last arrow time: {self.last_arrow_time}")
+                    #print(f"Last arrow time: {self.last_arrow_time}")
                     self.arrow_rect.center = self.rect.center
                     self.arrow_dx = character_pos[0] - self.rect.centerx
                     self.arrow_dy = character_pos[1] - self.rect.centery
@@ -367,7 +367,7 @@ class Skeleton(Enemy):
                     self.arrow_rect.bottom < 0 or self.arrow_rect.top > self.height):
                     self.arrow_active = False
 
-            # super().update(character_pos, attacking, charging, character)
+            #super().update_hit_count(self.current_time)
 
             if direction.x < 0:
                 self.direction = "right"
@@ -454,12 +454,12 @@ class Witch(Enemy):
         if current_time - self.last_poison_time >= 1000:  # Check if 1 second has passed
             character.take_damage(2)  # Apply damage of 2 HP
             self.last_poison_time = current_time  # Update last poison time
-            print(f"Player poisoned! Player HP: {character.hp}")
+            #print(f"Player poisoned! Player HP: {character.hp}")
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
         
-        # super().update(character_pos, attacking, charging, character)
+        #super().update(character_pos, attacking, charging, character)
 
         # Apply poison damage if player is within poison circle
         poison_center = self.poison_aoe_rect.center
@@ -639,7 +639,7 @@ class EnemyManager:
                 enemy = Skeleton(self.enemy_frames["skeleton"], self.enemy_frames["skeleton_attack"], self.enemy_pos, self.width, self.height, character, game)
             if enemy is not None:
                 self.enemies.append(enemy)
-                print(f"Spawned {enemy_name} at {self.enemy_pos}")
+                #print(f"Spawned {enemy_name} at {self.enemy_pos}")
         self.active_enemies = self.enemies
 
     def update(self, character_pos, attacking, charging, character):
@@ -750,6 +750,9 @@ class Character:
         self.speed_boost_duration = 5000
         self.speed_boost_start_time = 0
         self.speed_boost_active = False
+        self.shield_duration = 2000  # Thời gian miễn nhiễm sát thương (3 giây) tính bằng ms
+        self.shield_active = False
+        self.shield_start_time = 0
         self.load_assets()
         self.slash()
         self.reset_states()
@@ -771,9 +774,12 @@ class Character:
 
     def take_damage(self, damage):
         """Giảm máu của nhân vật khi bị tấn công."""
+        current_time = pygame.time.get_ticks()
+        if self.shield_active and current_time - self.shield_start_time <= self.shield_duration:
+            print("Shield active! No damage taken.")
+            return  # Không nhận sát thương nếu khiên đang hoạt động
         if self.alive:
             self.hp -= damage
-            # print(f"Character HP: {self.hp}")
             if self.hp <= 0:
                 self.hp = 0
                 self.alive = False
@@ -881,7 +887,12 @@ class Character:
         self.movement_speed = 5
 
     def activate_health_boost(self, current_time): 
+        self.hp = min(self.hp + 20, 100)
         print("health activated")
+
+    def activate_cross(self, current_time): 
+        self.hp = 100
+        print("cross activated")
     
     def activate_damage_boost(self, current_time): 
         self.damage_boost_active = True 
@@ -900,10 +911,9 @@ class Character:
                 print("Damage boost ended.")
 
     def activate_shield(self, current_time): 
-        print("shield activated")
-        
-    def activate_cross(self, current_time): 
-        print("cross activated")
+        self.shield_active = True
+        self.shield_start_time = current_time
+        print("Shield activated! Invulnerable for 2 seconds.")
 
     def activate_speed_boost(self, current_time):
         self.speed_boost_active = True
@@ -1081,8 +1091,8 @@ class Game:
         self.stairway = pygame.image.load(os.path.join(Sprites_folder, 'Stairway.png'))
         self.stairway = pygame.transform.scale(self.stairway, (int(self.stairway.get_width() * self.scale_factor), int(self.stairway.get_height() * self.scale_factor)))
         self.stairway_rect = self.stairway.get_rect(center=(self.width // 2, self.height // 2))
-        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'tree.png'))
-        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.3), int(self.obstacle.get_height() * 0.3)))
+        self.obstacle = pygame.image.load(os.path.join(Sprites_folder, 'box.png'))
+        self.obstacle = pygame.transform.scale(self.obstacle, (int(self.obstacle.get_width() * 0.7), int(self.obstacle.get_height() * 0.7)))
         self.rock = pygame.image.load(os.path.join(Sprites_folder, 'rock.png'))
         self.rock = pygame.transform.scale(self.rock, (int(self.rock.get_width() * self.scale_factor), int(self.rock.get_height() * self.scale_factor)))
 
@@ -1179,7 +1189,7 @@ class Game:
         self.stair_drawn = False
         self.obstacle_list.clear()
         for _ in range(random.randint(5, 10)):
-            obstacle_type = random.choice(["tree", "rock"])
+            obstacle_type = random.choice(["tree"])
             if obstacle_type == "tree":
                 obstacle_sprite = self.obstacle
                 obstacle_rect = self.obstacle.get_rect()

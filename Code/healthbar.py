@@ -12,14 +12,14 @@ class HealthBar:
         self.position = position
 
         # Load images for the health bar
-        self.bar_image = pygame.image.load(os.path.join(Sprites_folder, 'HP1.png'))
+        self.bar_image = pygame.image.load(os.path.join(Sprites_folder, 'HP3.png'))
         self.bar_image = pygame.transform.scale(
             self.bar_image, 
             (int(self.bar_image.get_width() * scale_factor), int(self.bar_image.get_height() * scale_factor))
         )
         self.bar_rect = self.bar_image.get_rect(topleft=position)
 
-        self.overlay_image = pygame.image.load(os.path.join(Sprites_folder, 'HP2.png'))
+        self.overlay_image = pygame.image.load(os.path.join(Sprites_folder, 'HP4.png'))
         self.overlay_image = pygame.transform.scale(
             self.overlay_image, 
             (int(self.overlay_image.get_width() * scale_factor), int(self.overlay_image.get_height() * scale_factor))
