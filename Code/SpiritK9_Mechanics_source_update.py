@@ -202,7 +202,7 @@ class Goblin(Enemy):
         self.attack_frame_index = 0
         self.attack_frame_counter = 0
         self.attack_range = 50  # Define the attack range
-        self.attack_damage = 1  # Damage dealt by the goblin
+        self.attack_damage = 20  # Damage dealt by the goblin
         self.attack_delay = 1  # Delay between attacks in seconds
         self.last_attack_time = time.time()
 
@@ -225,13 +225,13 @@ class Goblin(Enemy):
         else:
             self.is_attacking = False
 
-    def goblin_special_attack(self, character, current_time): 
-        if current_time - self.last_attack_time >= self.attack_delay: 
-            self.last_attack_time = current_time 
-            self.is_attacking = True 
-            self.attack_frame_index = 0 # Reset attack frame index for animation 
-            character.hp -= 5 # Reduce player's HP by 5 
-            # print(f"Goblin attacked! Player HP: {character.hp}")
+    # def goblin_special_attack(self, character, current_time): 
+    #     if current_time - self.last_attack_time >= self.attack_delay: 
+    #         self.last_attack_time = current_time 
+    #         self.is_attacking = True 
+    #         self.attack_frame_index = 0 # Reset attack frame index for animation 
+    #         character.take_damage(20)
+    #         # print(f"Goblin attacked! Player HP: {character.hp}")
 
     def draw(self, screen):
         if not self.eliminated:
@@ -276,17 +276,23 @@ class Skeleton(Enemy):
         self.arrow_speed = 15
         self.arrow_active = False
         self.last_arrow_time = 0
-        self.arrow_cooldown = 2
+        self.arrow_cooldown = 2  # Adjusted cooldown duration
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
         self.attack_timer = 0
         self.attack_duration = 1.0
         self.attack_frame_rate = 0.2
+        self.attack_damage = 0.000001
+
+    def skeleton_special_attack(self, character, current_time):
+        self.last_attack_time = current_time
+        self.is_attacking = True  # Set attacking state
+        self.attack_frame_index = 0  # Reset attack frame index for animation
+        character.take_damage(self.attack_damage)
 
     def update(self, character_pos, attacking, charging, character):
-        current_time = time.time()
-
+        self.current_time = time.time()
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
             self.drop_item()
@@ -301,34 +307,32 @@ class Skeleton(Enemy):
             if not self.is_attacking:
                 if distance_to_player < self.ideal_distance:
                     direction = direction.normalize() if direction.length() != 0 else Vector2(0, 0)
-                    self.enemy_pos -= direction * self.enemy_speed
+                    self.enemy_pos -= direction * (self.enemy_speed / 2)  # Move away slowly
                 elif distance_to_player > self.ideal_distance:
                     direction = direction.normalize() if direction.length() != 0 else Vector2(0, 0)
                     self.enemy_pos += direction * self.enemy_speed
                 self.rect.center = self.enemy_pos
 
-            # Định nghĩa vùng thu hẹp
+            # Ensure the skeleton stays within screen bounds
             min_x, max_x = 200, self.width - 100  
             min_y, max_y = 100, self.height - 100  
-
-            # Giới hạn vị trí trong màn hình
             self.rect.left = max(min_x, self.rect.left)
             self.rect.right = min(max_x, self.rect.right)
             self.rect.top = max(min_y, self.rect.top)
             self.rect.bottom = min(max_y, self.rect.bottom)
-            # Cập nhật lại vị trí self.enemy_pos để đồng bộ
             self.enemy_pos = Vector2(self.rect.center)
 
-            if not self.arrow_active and not self.is_attacking and current_time - self.last_arrow_time > self.arrow_cooldown:
+            if not self.arrow_active and not self.is_attacking and self.current_time - self.attack_timer > self.arrow_cooldown:
                 self.is_attacking = True
-                self.attack_timer = current_time
+                self.attack_timer = self.current_time
 
             if self.is_attacking:
-                self.attack_frame_index = int((current_time - self.attack_timer) / self.attack_frame_rate) % len(self.attack_frames)
-                if current_time - self.attack_timer >= self.attack_duration:
+                self.attack_frame_index = int((self.current_time - self.attack_timer) / self.attack_frame_rate) % len(self.attack_frames)
+                if self.current_time - self.last_arrow_time >= self.attack_duration:
                     self.is_attacking = False
                     self.arrow_active = True
-                    self.last_arrow_time = current_time
+                    self.last_arrow_time = self.current_time
+                    print(f"Last arrow time: {self.last_arrow_time}")
                     self.arrow_rect.center = self.rect.center
                     self.arrow_dx = character_pos[0] - self.rect.centerx
                     self.arrow_dy = character_pos[1] - self.rect.centery
@@ -342,17 +346,15 @@ class Skeleton(Enemy):
                 self.arrow_rect.y += self.arrow_dy * self.arrow_speed
                 self.arrow_hitbox.center = self.arrow_rect.center
 
-                if character.character_rect.colliderect(self.arrow_hitbox):
-                    print("Character hit by arrow!")                    
-                    character.hp -= 10
+                if character.character_rect.colliderect(self.arrow_hitbox):                  
+                    self.skeleton_special_attack(character, self.current_time)
                     self.arrow_active = False
-
 
                 if (self.arrow_rect.right < 0 or self.arrow_rect.left > self.width or
                     self.arrow_rect.bottom < 0 or self.arrow_rect.top > self.height):
                     self.arrow_active = False
 
-            super().update(character_pos, attacking, charging, character)
+            # super().update(character_pos, attacking, charging, character)
 
             if direction.x < 0:
                 self.direction = "right"
@@ -362,6 +364,7 @@ class Skeleton(Enemy):
         return self.direction
 
     def draw(self, screen):
+        current_time = time.time()
         if not self.eliminated:
             self.frame_counter += 1
             if self.frame_counter >= 5:
@@ -431,22 +434,30 @@ class Witch(Enemy):
         self.show_poison_aoe = False
         self.poison_aoe_timer = 0
         self.poison_aoe_duration = 8000
+        self.last_poison_time = 0  # Track the last time damage was applied
+
+    def Witch_special_attack(self, character):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_poison_time >= 1000:  # Check if 1 second has passed
+            character.take_damage(2)  # Apply damage of 2 HP
+            self.last_poison_time = current_time  # Update last poison time
+            print(f"Player poisoned! Player HP: {character.hp}")
 
     def update(self, character_pos, attacking, charging, character):
         current_time = pygame.time.get_ticks()
-        super().update(character_pos, attacking, charging, character)
+        
+        # super().update(character_pos, attacking, charging, character)
 
-        # Apply poison damage 
-        if self.poison_active and self.rect.colliderect(character.character_rect): 
-            character.hp -= 2 # Reduce player's HP by 2 per second 
-            print(f"Player poisoned! Player HP: {character.hp}") # Check if poison duration is over 
-
-        if current_time - self.poison_start_time >= 1: 
-            self.poison_active = False
+        # Apply poison damage if player is within poison circle
+        poison_center = self.poison_aoe_rect.center
+        character_center = character.character_rect.center
+        distance = math.hypot(character_center[0] - poison_center[0], character_center[1] - poison_center[1])
+        if self.show_poison_aoe and distance <= self.warning_circle_radius:
+            self.Witch_special_attack(character)
 
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
-            self.drop_item()
+            self.dropped_item = LoadItem(os.path.join(Sprites_folder, 'speed.gif'), self.rect)
 
         if not self.eliminated:
             player_pos = Vector2(character_pos)
@@ -454,18 +465,12 @@ class Witch(Enemy):
             distance_to_player = player_pos.distance_to(self.enemy_pos)
             direction = player_pos - self.enemy_pos
 
+            # Teleportation logic
             if self.teleporting:
                 if current_time - self.teleport_start_time >= self.teleport_duration:
                     while True:
-                        # Định nghĩa giới hạn vùng dịch chuyển
-                        min_x, max_x = 100, self.width - 100
-                        min_y, max_y = 100, self.height - 100
-
-                        # Chọn vị trí ngẫu nhiên trong vùng giới hạn
-                        new_x = random.randint(min_x, max_x - self.rect.width)
-                        new_y = random.randint(min_y, max_y - self.rect.height)
-
-                        # Kiểm tra khoảng cách đủ xa với người chơi
+                        new_x = random.randint(0, self.width - self.rect.width)
+                        new_y = random.randint(0, self.height - self.rect.height)
                         if Vector2(new_x, new_y).distance_to(player_pos) > 650:
                             self.rect.x = new_x
                             self.rect.y = new_y
@@ -481,6 +486,7 @@ class Witch(Enemy):
                     self.teleporting = True
                     self.teleport_start_time = current_time
 
+            # Warning circle management
             self.warning_circle_timer += self.clock.get_time()
             if self.warning_circle_timer >= self.warning_circle_interval:
                 self.warning_circle_timer = 0
@@ -528,6 +534,7 @@ class Witch(Enemy):
                 if self.poison_aoe_timer >= self.poison_aoe_duration:
                     self.show_poison_aoe = False
 
+            # Hit detection
             if distance_to_player < 100:
                 if attacking and not self.hit_recently:
                     if current_time - self.last_hit_time >= self.hit_delay:
@@ -536,12 +543,6 @@ class Witch(Enemy):
                         self.last_hit_time = current_time
 
                 if charging and not self.skill_hit_recently:
-                    if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
-                        self.skill_hit_recently = True
-                        self.last_skill_hit_time = current_time
-                        
-                if character.slash_hitted and not self.skill_hit_recently:  # Add slash hit detection
                     if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
                         self.hit_count += 1
                         self.skill_hit_recently = True
@@ -758,7 +759,7 @@ class Character:
         """Giảm máu của nhân vật khi bị tấn công."""
         if self.alive:
             self.hp -= damage
-            print(f"Character HP: {self.hp}")
+            # print(f"Character HP: {self.hp}")
             if self.hp <= 0:
                 self.hp = 0
                 self.alive = False
@@ -1206,23 +1207,11 @@ class Game:
 
             self.health_bar.update(self.character.hp)
             self.health_bar.draw(self.screen)
-
             # Kiểm tra nếu nhân vật đã chết
             if not self.character.alive:
                 print("Game Over!")
                 pygame.quit()
                 sys.exit()
-
-            for enemy in self.enemy_manager.enemies:
-                if self.character.hitbox.colliderect(enemy.rect):
-                    # Nếu quái Goblin, gọi logic tấn công của nó
-                    if isinstance(enemy, Goblin):
-                        enemy.goblin_special_attack(self.character, time.time())
-                    elif isinstance(enemy, Skeleton):
-                        enemy.skeleton_special_attack(self.character, time.time())
-                    elif isinstance(enemy, Witch):
-                        enemy.cast_poison(self.character)
-                    break  # Chỉ xử lý 1 lần nếu va chạm
 
             for item in self.dropped_items:
                 item.draw(self.screen, self.character.character_rect, current_time, self.character)
