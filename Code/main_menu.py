@@ -45,7 +45,7 @@ except pygame.error as e:
 
 # Load images
 image_path = os.path.join(Sprites_folder, 'Background_menu.jpeg')
-logo_path = os.path.join(Sprites_folder, 'Goblin.gif')
+logo_path = os.path.join(Sprites_folder, 'chill slime.png')
 credit_bg_path = os.path.join(Sprites_folder, 'blur.jpeg')
 options_image_path = os.path.join(Sprites_folder, 'blur.jpeg')
 try:
@@ -232,7 +232,7 @@ except pygame.error as e:
 def show_logo():
     start_time = time.time()
     while time.time() - start_time < 3:  # Show logo for 3 seconds
-        screen.fill(red)
+        screen.fill(black)
         screen.blit(logo_image, (width // 2 - logo_image.get_width() // 2, height // 2 - logo_image.get_height() // 2))
         pygame.display.flip()
         for event in pygame.event.get():
