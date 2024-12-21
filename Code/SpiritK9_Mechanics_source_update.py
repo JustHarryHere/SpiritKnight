@@ -30,7 +30,7 @@ Font_folder = os.path.join(script_dir, '..', 'Font')
 
 run_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'running-6358.wav'))
 pygame.mixer.music.load(os.path.join(Music_folder, 'Kevin MacLeod - 8bit Dungeon Boss  NO COPYRIGHT 8-bit Music.mp3'))
-#pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
+pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
 class Enemy:
     def __init__(self, frames, initial_pos, width, height, character, game):
@@ -754,11 +754,15 @@ class Character:
         self.shield_duration = 2000  # Thời gian miễn nhiễm sát thương (3 giây) tính bằng ms
         self.shield_active = False
         self.shield_start_time = 0
+        self.damage_animation = False  # Trạng thái hoạt ảnh nhận sát thương
+        self.damage_frame_index = 0  # Chỉ số khung hình hiện tại của hoạt ảnh
+        self.damage_frame_counter = 0  # Bộ đếm khung hình
         self.load_assets()
         self.slash()
         self.reset_states()
         self.alive = True  # Trạng thái nhân vật
         self.game_over = False  # Trạng thái kết thúc game
+        self.hit_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Ouch.wav'))
 
 
     def slash(self):
@@ -774,18 +778,23 @@ class Character:
         self.slash_hitted = False
 
     def take_damage(self, damage):
-        """Giảm máu của nhân vật khi bị tấn công."""
         current_time = pygame.time.get_ticks()
         if self.shield_active and current_time - self.shield_start_time <= self.shield_duration:
             print("Shield active! No damage taken.")
-            return  # Không nhận sát thương nếu khiên đang hoạt động
+            return
         if self.alive:
             self.hp -= damage
+            self.hit_sound.play()
             if self.hp <= 0:
                 self.hp = 0
                 self.alive = False
-                self.game_over = True  # Kích hoạt trạng thái kết thúc
+                self.game_over = True
                 print("Game Over! Character died.")
+            else:
+                self.damage_animation = True  # Kích hoạt hoạt ảnh nhận sát thương
+                self.damage_frame_index = 0
+                self.damage_frame_counter = 0
+
                 
     def load_assets(self):
         self.load_gif()
@@ -793,6 +802,7 @@ class Character:
         self.load_charge_attack_frames()
         self.load_run_frames()
         self.load_dash_frames()
+        self.load_damage_frames()  # Thêm dòng này
 
     def load_gif(self):
         gif_path = os.path.join(Sprites_folder, 'lil dude bigger.gif')
@@ -852,6 +862,17 @@ class Character:
             self.dash_frames.append(dash_frame)
 
         self.flipped_dash_frames = [pygame.transform.flip(dash_frame, True, False) for dash_frame in self.dash_frames]
+
+    def load_damage_frames(self):
+        damage_sprite_sheet = pygame.image.load(os.path.join(Sprites_folder, 'Ouch.png')).convert_alpha()
+        self.damage_frames = []
+        sprite_width, sprite_height = damage_sprite_sheet.get_width() // 7, damage_sprite_sheet.get_height()
+        
+        for i in range(7):  # Giả sử có 7 khung hình
+            frame = damage_sprite_sheet.subsurface((i * sprite_width, 0, sprite_width, sprite_height))
+            self.damage_frames.append(frame)
+        
+        self.flipped_damage_frames = [pygame.transform.flip(frame, True, False) for frame in self.damage_frames]
 
     def reset_states(self):
         self.character_rect = self.frames[0].get_rect(center=(self.width // 2, self.height // 2))
@@ -1044,6 +1065,16 @@ class Character:
                 self.attack_frame_index += 1
             if self.attack_frame_index >= len(self.attack_frames):
                 self.attacking = False
+
+        elif self.damage_animation:
+            frame = (self.flipped_damage_frames if self.flipped else self.damage_frames)[self.damage_frame_index]
+            screen.blit(frame, self.character_rect)
+            self.damage_frame_counter += 1
+            if self.damage_frame_counter >= self.frame_update_rate:
+                self.damage_frame_counter = 0
+                self.damage_frame_index += 1
+            if self.damage_frame_index >= len(self.damage_frames):
+                self.damage_animation = False  # Kết thúc hoạt ảnh nhận sát thương
 
         elif self.running:
             if self.flipped:

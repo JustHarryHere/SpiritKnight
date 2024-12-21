@@ -289,6 +289,8 @@ def spawn_boss():
     getting_hit_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Ouch.wav'))
     dash_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Dash-_Jett_-Sound-Effect-_Valorant-Game-SFX_.wav'))
     charge_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'loud-thunder-192165.wav'))
+    pygame.mixer.music.load(os.path.join(Music_folder, '8-bit RPG Music  Boss Battle.mp3'))
+    pygame.mixer.music.play(-1)  # -1 means the music will loop indefinitely
 
     boss_rect = boss_frames[0].get_rect(center=(width // 2, height // 2))
     # Giới hạn vùng di chuyển của boss
