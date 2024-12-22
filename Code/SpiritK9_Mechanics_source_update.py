@@ -47,7 +47,7 @@ class Enemy:
         self.hit_delay = 0.5
         self.skill_hit_recently = False
         self.last_skill_hit_time = 0
-        self.skill_hit_delay = 10
+        self.skill_hit_delay = 5
         self.eliminated = False
         self.direction = "left"
         self.character = character
@@ -91,14 +91,14 @@ class Enemy:
 
                 if attacking and not self.hit_recently:
                     if current_time - self.last_hit_time >= self.hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += self.character.dame
                         print(f"Hit count increased: {self.hit_count}")  # Debug statement
                         self.hit_recently = True
                         self.last_hit_time = current_time
 
                 if (charging or character.slash_hitted) and not self.skill_hit_recently:
                     if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += self.character.dame
                         print(f"Skill hit count increased: {self.hit_count}")  # Debug statement
                         self.skill_hit_recently = True
                         self.last_skill_hit_time = current_time
@@ -128,7 +128,7 @@ class Enemy:
             else:
                 screen.blit(self.flipped_frames[self.frame_index], self.rect)
 
-            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+            #pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
         if self.eliminated and self.dropped_item:
             self.dropped_item.draw(screen, self.character.character_rect)
@@ -239,14 +239,6 @@ class Goblin(Enemy):
         else:
             self.is_attacking = False
 
-    # def goblin_special_attack(self, character, current_time): 
-    #     if current_time - self.last_attack_time >= self.attack_delay: 
-    #         self.last_attack_time = current_time 
-    #         self.is_attacking = True 
-    #         self.attack_frame_index = 0 # Reset attack frame index for animation 
-    #         character.take_damage(20)
-    #         # print(f"Goblin attacked! Player HP: {character.hp}")
-
     def draw(self, screen):
         if not self.eliminated:
             if self.is_attacking:
@@ -273,7 +265,7 @@ class Goblin(Enemy):
                 else:
                     screen.blit(self.flipped_frames[self.frame_index], self.rect)
 
-            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+            #pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
         if self.eliminated and self.dropped_item:
             self.dropped_item.draw(screen, self.character.character_rect)
@@ -289,15 +281,16 @@ class Skeleton(Enemy):
         self.enemy_speed = 3
         self.arrow_speed = 15
         self.arrow_active = False
-        self.last_arrow_time = 0
+        self.last_arrow_time = time.time()
         self.arrow_cooldown = 2  # Adjusted cooldown duration
         self.arrow_dx, self.arrow_dy = 0, 0
         self.is_attacking = False
         self.attack_frame_index = 0
-        self.attack_timer = 0
+        self.attack_timer = time.time()
         self.attack_duration = 1.0
         self.attack_frame_rate = 0.2
         self.attack_damage = 1
+        self.current_time = time.time()
 
     def skeleton_special_attack(self, character, current_time):
         self.last_attack_time = current_time
@@ -310,7 +303,6 @@ class Skeleton(Enemy):
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
             self.drop_item()
-            #print(f"Skeleton eliminated. Dropping item: {self.dropped_item}")  # Debug statement
 
         if not self.eliminated:
             player_pos = Vector2(character_pos)
@@ -346,7 +338,6 @@ class Skeleton(Enemy):
                     self.is_attacking = False
                     self.arrow_active = True
                     self.last_arrow_time = self.current_time
-                    #print(f"Last arrow time: {self.last_arrow_time}")
                     self.arrow_rect.center = self.rect.center
                     self.arrow_dx = character_pos[0] - self.rect.centerx
                     self.arrow_dy = character_pos[1] - self.rect.centery
@@ -368,7 +359,22 @@ class Skeleton(Enemy):
                     self.arrow_rect.bottom < 0 or self.arrow_rect.top > self.height):
                     self.arrow_active = False
 
-            #super().update_hit_count(self.current_time)
+            # Hit detection
+            if distance_to_player < 100:
+                if attacking and not self.hit_recently:
+                    if self.current_time - self.last_hit_time >= self.hit_delay:
+                        self.hit_count += self.character.dame
+                        self.hit_recently = True
+                        self.last_hit_time = self.current_time
+
+                if (charging or character.slash_hitted) and not self.skill_hit_recently:
+                    if self.current_time - self.last_skill_hit_time >= self.skill_hit_delay:
+                        self.hit_count += self.character.dame
+                        self.skill_hit_recently = True
+                        self.last_skill_hit_time = self.current_time
+            else:
+                self.hit_recently = False
+                self.skill_hit_recently = False
 
             if direction.x < 0:
                 self.direction = "right"
@@ -397,7 +403,7 @@ class Skeleton(Enemy):
                 else:
                     screen.blit(flipped_frame, self.rect)
 
-            pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
+            #pygame.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
             if self.arrow_active:
                 arrow_angle = math.degrees(math.atan2(self.arrow_dy, self.arrow_dx))
@@ -419,13 +425,13 @@ class Witch(Enemy):
         self.rotation_speed = 1
         self.teleporting = False
         self.teleport_start_time = 0
-        self.teleport_duration = 700
-        self.teleport_cooldown = 4000
+        self.teleport_duration = 2.0
+        self.teleport_cooldown = 4.0
         self.last_teleport_time = 0
         self.first_teleport = True
         self.warning_circle_timer = 0
-        self.warning_circle_interval = 4000
-        self.warning_circle_duration = 3000
+        self.warning_circle_interval = 4.0
+        self.warning_circle_duration = 3.0
         self.warning_circle_visible_timer = 0
         self.show_warning_circle = False
         self.warning_circle_position = None
@@ -438,27 +444,27 @@ class Witch(Enemy):
         self.poison_frames = poison_frames
         self.poison_frame_index = 0
         self.poison_frame_timer = 0
-        self.poison_frame_duration = 200
+        self.poison_frame_duration = 0.2
         self.show_poison_gif = False
         self.poison_gif_display_timer = 0
-        self.poison_gif_delay = 2000
+        self.poison_gif_delay = 2.0
         self.poison_aoe_image = pygame.image.load(os.path.join(Sprites_folder, 'PoisonAoe.png')).convert_alpha()
         self.poison_aoe_rect = self.poison_aoe_image.get_rect()
         self.warning_circle_radius = self.poison_aoe_rect.width // 2
         self.show_poison_aoe = False
         self.poison_aoe_timer = 0
-        self.poison_aoe_duration = 8000
-        self.last_poison_time = 0  # Track the last time damage was applied
+        self.poison_aoe_duration = 8.0
+        self.last_poison_time = time.time()  # Track the last time damage was applied
 
     def Witch_special_attack(self, character):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_poison_time >= 1000:  # Check if 1 second has passed
+        current_time = time.time()
+        if current_time - self.last_poison_time >= 1.0:  # Check if 1 second has passed
             character.take_damage(2)  # Apply damage of 2 HP
             self.last_poison_time = current_time  # Update last poison time
             #print(f"Player poisoned! Player HP: {character.hp}")
 
     def update(self, character_pos, attacking, charging, character):
-        current_time = pygame.time.get_ticks()
+        current_time = time.time()
         
         #super().update(character_pos, attacking, charging, character)
 
@@ -471,7 +477,6 @@ class Witch(Enemy):
 
         if self.hit_count >= 3 and not self.eliminated:
             self.eliminated = True
-            #self.dropped_item = LoadItem(os.path.join(Sprites_folder, 'speed.gif'), self.rect)
             self.drop_item()
 
         if not self.eliminated:
@@ -502,33 +507,28 @@ class Witch(Enemy):
                     self.teleport_start_time = current_time
 
             # Warning circle management
-            self.warning_circle_timer += self.clock.get_time()
-            if self.warning_circle_timer >= self.warning_circle_interval:
-                self.warning_circle_timer = 0
+            if current_time - self.warning_circle_timer >= self.warning_circle_interval:
+                self.warning_circle_timer = current_time
                 self.show_warning_circle = True
-                self.warning_circle_visible_timer = 0
+                self.warning_circle_visible_timer = current_time
                 self.warning_circle_position = character_pos
-                self.poison_gif_display_timer = 0
+                self.poison_gif_display_timer = current_time
                 self.throw_poison_bottle = True
-                self.poison_bottle_start_time = pygame.time.get_ticks()
+                self.poison_bottle_start_time = current_time
                 self.poison_bottle_target = self.warning_circle_position
                 self.poison_bottle_rect.center = self.rect.center
 
             if self.show_warning_circle:
-                self.warning_circle_visible_timer += self.clock.get_time()
-                self.poison_gif_display_timer += self.clock.get_time()
-                if self.poison_gif_display_timer >= self.poison_gif_delay:
-                    self.show_poison_gif = True
-                if self.warning_circle_visible_timer >= self.warning_circle_duration:
+                if current_time - self.warning_circle_visible_timer >= self.warning_circle_duration:
                     self.show_warning_circle = False
                     self.show_poison_aoe = True
-                    self.poison_aoe_timer = 0
+                    self.poison_aoe_timer = current_time
                     self.poison_aoe_rect.center = self.warning_circle_position
 
             if self.throw_poison_bottle:
                 elapsed_time = current_time - self.poison_bottle_start_time
-                if elapsed_time <= 1500:
-                    progress = elapsed_time / 1500
+                if elapsed_time <= 1.5:
+                    progress = elapsed_time / 1.5
                     new_x = self.rect.x + (self.poison_bottle_target[0] - self.rect.x) * progress
                     new_y = self.rect.y + (self.poison_bottle_target[1] - self.rect.y) * progress
                     self.poison_bottle_rect.center = (new_x, new_y)
@@ -536,30 +536,33 @@ class Witch(Enemy):
                     self.throw_poison_bottle = False
 
             if self.show_poison_gif:
-                self.poison_frame_timer += self.clock.get_time()
-                if self.poison_frame_timer >= self.poison_frame_duration:
-                    self.poison_frame_timer = 0
+                if current_time - self.poison_gif_display_timer >= self.poison_frame_duration:
+                    self.poison_gif_display_timer = current_time
                     self.poison_frame_index = (self.poison_frame_index + 1) % len(self.poison_frames)
                 if self.poison_frame_index == len(self.poison_frames) - 1:
                     self.show_poison_gif = False
                     self.poison_frame_index = 0
 
             if self.show_poison_aoe:
-                self.poison_aoe_timer += self.clock.get_time()
-                if self.poison_aoe_timer >= self.poison_aoe_duration:
+                if current_time - self.poison_aoe_timer >= self.poison_aoe_duration:
                     self.show_poison_aoe = False
 
             # Hit detection
             if distance_to_player < 100:
                 if attacking and not self.hit_recently:
+                    a = current_time - self.last_hit_time
+                    print(f"self.current_time - self.last_hit_time = {a} -- >> {current_time} - {self.last_hit_time}")
                     if current_time - self.last_hit_time >= self.hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += self.character.dame
+                        print(f"Hit count increased: {self.hit_count}")  # Debug statement
                         self.hit_recently = True
                         self.last_hit_time = current_time
 
                 if charging and not self.skill_hit_recently:
+                    print(f"Charging: {charging}")
                     if current_time - self.last_skill_hit_time >= self.skill_hit_delay:
-                        self.hit_count += 1
+                        self.hit_count += self.character.dame
+                        super().update_hit_count(current_time)
                         self.skill_hit_recently = True
                         self.last_skill_hit_time = current_time
             else:
@@ -743,9 +746,10 @@ class Cross:
             self.cross_frame_index = (self.cross_frame_index + 1) % len(self.frames)
 
 class Character:
-    def __init__(self, width, height, enemy_manager):
+    def __init__(self, width, height, enemy_manager, screen):
         self.width = width
         self.height = height
+        self.screen = screen
         self.enemy_manager = enemy_manager
         self.hp = 100
         self.speed_boost_duration = 5000
@@ -763,6 +767,7 @@ class Character:
         self.alive = True  # Trạng thái nhân vật
         self.game_over = False  # Trạng thái kết thúc game
         self.hit_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'Ouch.wav'))
+        self.dame = 1
 
 
     def slash(self):
@@ -786,10 +791,27 @@ class Character:
             self.hp -= damage
             self.hit_sound.play()
             if self.hp <= 0:
-                self.hp = 0
-                self.alive = False
-                self.game_over = True
-                print("Game Over! Character died.")
+                health_bar.update(self.hp)
+                health_bar.draw(self.screen)
+                game_over = True
+                font_die = pygame.font.Font(os.path.join(Font_folder, 'Pixelmax-Regular.otf'), 100)
+                text_die_black = font_die.render(f"GAME OVER!", True, (0, 0, 0))  # Màu đen
+                text_die_rect = text_die_black.get_rect(center = (width//2, height//2 - 200))
+                text_die_white = font_die.render(f"GAME OVER!", True, (255, 255, 255))  # Màu trắng
+                screen.blit(text_die_black, text_die_rect.move(10,10))
+                screen.blit(text_die_white, text_die_rect)
+
+                while game_over:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                    # Hiển thị thông báo game over tại đây
+                    pygame.display.flip()
+                    self.hp = 0
+                    self.alive = False
+                    self.game_over = True
+                    # print("Game Over! Character died.")
             else:
                 self.damage_animation = True  # Kích hoạt hoạt ảnh nhận sát thương
                 self.damage_frame_index = 0
@@ -1096,7 +1118,7 @@ class Character:
             else:
                 screen.blit(self.frames[self.frame_index], self.character_rect)
 
-        pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)  # Hitbox (red)
+        #pygame.draw.rect(screen, (255, 0, 0), self.hitbox, 2)  # Hitbox (red)
 
 class Game:
     def __init__(self):
@@ -1111,8 +1133,8 @@ class Game:
         self.load_enemy_frames()
         self.load_enemies()
 
-        self.enemy_manager = EnemyManager(self.enemy_frames, self.width, self.height, 100, 2, self.enemy_list, self.clock)
-        self.character = Character(self.width, self.height, self.enemy_manager)
+        self.enemy_manager = EnemyManager(self.enemy_frames, self.width, self.height, 100, 4, self.enemy_list, self.clock)
+        self.character = Character(self.width, self.height, self.enemy_manager, self.screen)
         # self.loaditem = LoadItem
 
         self.attack_sound = pygame.mixer.Sound(os.path.join(Music_folder, 'sword-sound-260274.wav'))
@@ -1178,7 +1200,7 @@ class Game:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_r]:
                 self.level += 1
-                if self.level == 3:
+                if self.level == 10:
                     # Hiển thị thông báo
                     font = pygame.font.Font(os.path.join(Font_folder, 'properhitboxglobal.ttf'), 30)
                     restore_text = font.render("YOUR HEALTH WILL BE RESTORED", True, (255, 255, 255))
@@ -1360,11 +1382,11 @@ class Game:
 
             self.character.collision = collision_detected
 
-            if self.character.collision:
-                pygame.draw.rect(self.screen, (255, 255, 0), self.character.hitbox, 2)
-                for enemy in self.enemy_manager.enemies:
-                    if self.character.hitbox.colliderect(enemy.rect) and not enemy.eliminated:
-                        pygame.draw.rect(self.screen, (255, 255, 0), enemy.rect, 2)
+            #if self.character.collision:
+                #pygame.draw.rect(self.screen, (255, 255, 0), self.character.hitbox, 2)
+                #for enemy in self.enemy_manager.enemies:
+                    #if self.character.hitbox.colliderect(enemy.rect) and not enemy.eliminated:
+                        #pygame.draw.rect(self.screen, (255, 255, 0), enemy.rect, 2)
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LSHIFT] and not self.character.dashing and not self.character.dash_cooldown:
